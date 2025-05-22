@@ -8,6 +8,7 @@ let ogimage = "https://genai-kitchen.vercel.app/og-image.png";
 let sitename = "Unoform Kitchen Designer";
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://genai-kitchen.vercel.app'),
   title,
   description,
   icons: {

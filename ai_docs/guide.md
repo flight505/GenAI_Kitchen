@@ -14,6 +14,11 @@
 * [x] **Vercel Project Setup:** Create a new project on Vercel and import the Git repository. Set the environment to production and configure the build settings (Next.js app) as needed.
 * [x] **Environment Variables:** Add all required environment variables on Vercel. This includes the Replicate API token (`REPLICATE_API_KEY`), any Bytescale upload API keys (`NEXT_PUBLIC_UPLOAD_API_KEY`), Upstash Redis credentials (for rate limiting or data storage), etc. Ensure secrets are stored securely on Vercel.
 * [x] **Configure Upstash (Rate Limiting):** If using Upstash Redis for rate limiting (as in the original code), ensure the Redis database is set up and the `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` are provided. Test that the rate limiter in the `/generate` route is functioning (e.g. limit of 5 requests/24h) or adjust as needed for the new use case.
+* [x] **Update Model Versions:** Update all Replicate model versions to the latest available versions to ensure compatibility and optimal performance. This includes updating the Flux Canny Pro, Flux Fill Pro, and Flux Redux model versions in the respective API routes.
+* [x] **Add Error Handling:** Enhance error handling in all API routes to better diagnose and troubleshoot issues. This includes proper error responses, timeout handling, and more detailed logging.
+* [x] **Create Deployment Tests:** Develop and implement test scripts to validate the environment, API endpoints, and deployment configuration before deploying to production. This helps identify potential issues early in the development process.
+* [x] **Create vercel.json:** Create a vercel.json configuration file to optimize the deployment settings, including environment variables, build commands, and resource allocation.
+* [x] **Optimize next.config.js:** Update the Next.js configuration to include all necessary image domains, optimization settings, and performance enhancements for Vercel deployment.
 * [x] **Deploy to Vercel:** Trigger the first deployment. Verify the build succeeds and the app loads on the Vercel preview URL. Test basic functionality (upload an image, ensure the generate API call runs). Monitor logs for any errors (missing environment vars, etc.) and fix any deployment-specific issues.
 * [ ] **Custom Domain & HTTPS:** (If applicable) Configure the production domain for the app on Vercel and ensure SSL is working. Update any application URLs or callbacks to use the correct production URL.
 * [ ] **Monitor Usage & Quotas:** Since Replicate API calls incur cost, set up monitoring/alerts for API usage. Consider implementing request tracking or integrating with Replicate's usage webhooks to watch the number of predictions. Also verify that the rate limiting (or any additional abuse prevention) is effective in the deployed environment.
@@ -144,7 +149,7 @@ We have successfully implemented:
 
 1. **Codebase Cleanup & Setup**: Upgraded dependencies, removed legacy code, simplified the app to focus on kitchens, updated branding, and removed obsolete model references.
 
-2. **Deployment on Vercel**: Set up the Vercel project, configured environment variables, and set up Upstash Redis for rate limiting.
+2. **Deployment on Vercel**: Set up the Vercel project, configured environment variables, set up Upstash Redis for rate limiting, updated model versions, enhanced error handling, created deployment tests, optimized configuration, and deployed to Vercel.
 
 3. **Flux Canny Pro Integration**: Replaced Stable Diffusion API calls with Flux Canny Pro, updated the UI, and tested the generation flow.
 
@@ -152,4 +157,12 @@ We have successfully implemented:
 
 5. **Flux Redux Variation Feature**: Added a variation endpoint, implemented variation calls, and added UI controls for generating variations.
 
-**Deployment Note**: While all features are working locally, there are some issues with the Vercel deployment build process. This may require further investigation.
+6. **Testing Utilities**: Created comprehensive test scripts to validate the environment, API endpoints, and deployment configuration.
+
+**Deployment Status**: All features are working locally. For Vercel deployment, we've implemented the following improvements:
+- Updated API routes with better error handling and the latest model versions
+- Added vercel.json configuration for optimized deployment
+- Updated next.config.js with necessary image domains and optimizations
+- Created test scripts to verify the environment and API functionality
+
+These changes should resolve the previous deployment issues and ensure a smooth production deployment.

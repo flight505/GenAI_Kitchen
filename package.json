@@ -3,7 +3,13 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test:env": "node test-build.js",
+    "test:api": "node test-api.js",
+    "test:api-routes": "node test-api-routes.js",
+    "test:deploy": "node test-vercel-deploy.js",
+    "test": "npm run test:env && npm run test:api",
+    "deploy": "npm run test:env && vercel deploy --prod"
   },
   "dependencies": {
     "@bytescale/upload-widget-react": "^4.9.0",

@@ -15,7 +15,9 @@
       "Bash(npm update:*)",
       "Bash(pkill:*)",
       "Bash(true)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "WebFetch(domain:replicate.com)",
+      "Bash(npm run:*)"
     ],
     "deny": []
   }

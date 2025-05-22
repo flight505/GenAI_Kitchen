@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         // Latest Flux Redux Dev model version
-        version: "5e0c9e8921852de36e1e8de5f62f053672a91118dd06ad2cf9f3439676e068b8",
+        version: "96b56814e57dfa601f3f524f82a2b336ef49012cda68828cb37cde66f481b7cb",
         input: {
           redux_image: imageUrl,
           prompt: prompt || "",

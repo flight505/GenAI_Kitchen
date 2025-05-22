@@ -49,16 +49,17 @@ export async function POST(request: Request) {
         Authorization: "Token " + process.env.REPLICATE_API_KEY,
       },
       body: JSON.stringify({
-        // Latest Flux Fill Pro model version
-        version: "e5f296dd5a4948fb1227ae9c120227c1d66a6e99273a76ba047740036225e588",
+        // Using Flux Fill Pro for inpainting
+        version: "10b45d01bb46cffc8d7893b36d720e369d732bb2e48ca3db469a18929eff359d",
         input: {
+          prompt: prompt,
           image: imageUrl,
           mask: maskImage,
-          prompt: prompt,
-          num_inference_steps: 50,
-          guidance_scale: 3.0,
-          output_format: "webp",
-          output_quality: 90
+          steps: 50,
+          guidance: 60,
+          prompt_upsampling: true,
+          safety_tolerance: 2,
+          output_format: "webp"
         },
       }),
     });

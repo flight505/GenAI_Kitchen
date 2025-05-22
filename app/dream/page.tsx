@@ -16,6 +16,7 @@ import appendNewToName from "../../utils/appendNewToName";
 import downloadPhoto from "../../utils/downloadPhoto";
 import DropDown from "../../components/DropDown";
 import { roomType, rooms, themeType, themes } from "../../utils/dropdownTypes";
+import MaskDrawingCanvas from "../../components/MaskDrawingCanvas";
 
 const options: UploadWidgetConfig = {
   apiKey: !!process.env.NEXT_PUBLIC_UPLOAD_API_KEY
@@ -51,6 +52,9 @@ export default function DreamPage() {
   const [photoName, setPhotoName] = useState<string | null>(null);
   const [theme, setTheme] = useState<themeType>("Modern");
   const [room] = useState<roomType>("Kitchen");
+  const [inpainting, setInpainting] = useState<boolean>(false);
+  const [editMode, setEditMode] = useState<boolean>(false);
+  const [inpaintPrompt, setInpaintPrompt] = useState<string>("");
 
   const UploadDropZone = () => (
     <UploadDropzone
@@ -101,6 +105,35 @@ export default function DreamPage() {
     setTimeout(() => {
       setLoading(false);
     }, 1300);
+  }
+
+  async function inpaintPhoto(maskDataUrl: string) {
+    if (!restoredImage || !inpaintPrompt) {
+      setError("Please provide a prompt for inpainting");
+      return;
+    }
+
+    setInpainting(true);
+    const res = await fetch("/inpaint", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        imageUrl: restoredImage,
+        maskImage: maskDataUrl,
+        prompt: inpaintPrompt,
+      }),
+    });
+
+    let newPhoto = await res.json();
+    if (res.status !== 200) {
+      setError(newPhoto);
+    } else {
+      setRestoredImage(typeof newPhoto === 'string' ? newPhoto : newPhoto[0]);
+    }
+    setInpainting(false);
+    setEditMode(false);
   }
 
   return (
@@ -207,6 +240,23 @@ export default function DreamPage() {
                         onLoadingComplete={() => setRestoredLoaded(true)}
                       />
                     </a>
+                    {editMode && (
+                      <div className="mt-4">
+                        <input
+                          type="text"
+                          placeholder="Describe what to change (e.g., 'make the cabinets white')"
+                          value={inpaintPrompt}
+                          onChange={(e) => setInpaintPrompt(e.target.value)}
+                          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <MaskDrawingCanvas
+                          imageUrl={restoredImage}
+                          onMaskGenerated={inpaintPhoto}
+                          width={475}
+                          height={475}
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
@@ -219,6 +269,19 @@ export default function DreamPage() {
                     <LoadingDots color="white" style="large" />
                   </span>
                 </button>
+              )}
+              {inpainting && (
+                <div className="mt-6">
+                  <p className="text-sm text-gray-500 mb-2">Applying your changes...</p>
+                  <button
+                    disabled
+                    className="bg-blue-500 rounded-full text-white font-medium px-4 pt-2 pb-3 w-40"
+                  >
+                    <span className="pt-4">
+                      <LoadingDots color="white" style="large" />
+                    </span>
+                  </button>
+                </div>
               )}
               {error && (
                 <div
@@ -236,6 +299,7 @@ export default function DreamPage() {
                       setRestoredImage(null);
                       setRestoredLoaded(false);
                       setError(null);
+                      setEditMode(false);
                     }}
                     className="bg-blue-500 rounded-full text-white font-medium px-4 py-2 mt-8 hover:bg-blue-500/80 transition"
                   >
@@ -243,17 +307,29 @@ export default function DreamPage() {
                   </button>
                 )}
                 {restoredLoaded && (
-                  <button
-                    onClick={() => {
-                      downloadPhoto(
-                        restoredImage!,
-                        appendNewToName(photoName!)
-                      );
-                    }}
-                    className="bg-white rounded-full text-black border font-medium px-4 py-2 mt-8 hover:bg-gray-100 transition"
-                  >
-                    Download Generated Kitchen
-                  </button>
+                  <>
+                    <button
+                      onClick={() => {
+                        downloadPhoto(
+                          restoredImage!,
+                          appendNewToName(photoName!)
+                        );
+                      }}
+                      className="bg-white rounded-full text-black border font-medium px-4 py-2 mt-8 hover:bg-gray-100 transition"
+                    >
+                      Download Generated Kitchen
+                    </button>
+                    <button
+                      onClick={() => setEditMode(!editMode)}
+                      className={`rounded-full font-medium px-4 py-2 mt-8 transition ${
+                        editMode 
+                          ? "bg-red-500 text-white hover:bg-red-600" 
+                          : "bg-green-500 text-white hover:bg-green-600"
+                      }`}
+                    >
+                      {editMode ? "Cancel Edit" : "Edit with Inpainting"}
+                    </button>
+                  </>
                 )}
               </div>
             </motion.div>

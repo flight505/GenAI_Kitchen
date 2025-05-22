@@ -1,0 +1,457 @@
+/* Modern Design System for GenAI Kitchen - Inspired by shadcn/ui */
+
+:root {
+  /* Border Radius */
+  --radius: 0.5rem;
+  
+  /* Light Mode Colors using OKLCH for better color consistency */
+  --background: oklch(0.99 0 0);
+  --foreground: oklch(0.15 0.01 285);
+  
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.01 285);
+  
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.01 285);
+  
+  /* Unoform Sage Green Primary */
+  --primary: oklch(0.65 0.08 145);
+  --primary-foreground: oklch(0.99 0 0);
+  
+  /* Soft Beige Secondary */
+  --secondary: oklch(0.92 0.02 85);
+  --secondary-foreground: oklch(0.15 0.01 285);
+  
+  --muted: oklch(0.96 0.005 285);
+  --muted-foreground: oklch(0.55 0.01 285);
+  
+  --accent: oklch(0.93 0.02 95);
+  --accent-foreground: oklch(0.15 0.01 285);
+  
+  --destructive: oklch(0.58 0.19 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  
+  --border: oklch(0.92 0.004 286);
+  --input: oklch(0.92 0.004 286);
+  --ring: oklch(0.65 0.08 145);
+  
+  /* Chart Colors */
+  --chart-1: oklch(0.65 0.15 41);
+  --chart-2: oklch(0.60 0.12 185);
+  --chart-3: oklch(0.40 0.07 227);
+  --chart-4: oklch(0.83 0.19 84);
+  --chart-5: oklch(0.77 0.19 70);
+}
+
+.dark {
+  --background: oklch(0.10 0.01 285);
+  --foreground: oklch(0.98 0 0);
+  
+  --card: oklch(0.15 0.01 285);
+  --card-foreground: oklch(0.98 0 0);
+  
+  --popover: oklch(0.15 0.01 285);
+  --popover-foreground: oklch(0.98 0 0);
+  
+  --primary: oklch(0.65 0.08 145);
+  --primary-foreground: oklch(0.15 0.01 285);
+  
+  --secondary: oklch(0.25 0.01 285);
+  --secondary-foreground: oklch(0.98 0 0);
+  
+  --muted: oklch(0.25 0.01 285);
+  --muted-foreground: oklch(0.71 0.01 286);
+  
+  --accent: oklch(0.25 0.01 285);
+  --accent-foreground: oklch(0.98 0 0);
+  
+  --destructive: oklch(0.70 0.19 22);
+  --destructive-foreground: oklch(0.98 0 0);
+  
+  --border: oklch(1 0 0 / 0.15);
+  --input: oklch(1 0 0 / 0.15);
+  --ring: oklch(0.65 0.08 145);
+}
+
+/* Base Styles */
+* {
+  border-color: var(--border);
+}
+
+body {
+  color: var(--foreground);
+  background-color: var(--background);
+}
+
+/* Modern Button Styles */
+.btn-modern {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  border-radius: var(--radius);
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  outline: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.btn-modern:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.btn-modern:disabled {
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.btn-default {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.btn-default:hover:not(:disabled) {
+  background-color: oklch(0.60 0.08 145);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: var(--secondary);
+  color: var(--secondary-foreground);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: oklch(0.88 0.02 85);
+}
+
+.btn-outline {
+  border: 1px solid var(--input);
+  background-color: var(--background);
+  color: var(--foreground);
+}
+
+.btn-outline:hover:not(:disabled) {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--foreground);
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.btn-destructive {
+  background-color: var(--destructive);
+  color: var(--destructive-foreground);
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+.btn-destructive:hover:not(:disabled) {
+  background-color: oklch(0.52 0.19 27);
+}
+
+/* Button Sizes */
+.btn-sm {
+  height: 2rem;
+  padding: 0 0.75rem;
+  font-size: 0.75rem;
+}
+
+.btn-md {
+  height: 2.5rem;
+  padding: 0.5rem 1rem;
+}
+
+.btn-lg {
+  height: 2.75rem;
+  padding: 0.5rem 2rem;
+}
+
+.btn-icon {
+  height: 2.5rem;
+  width: 2.5rem;
+  padding: 0;
+}
+
+/* Card Styles */
+.card {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background-color: var(--card);
+  color: var(--card-foreground);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 1.5rem;
+}
+
+.card-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+.card-description {
+  font-size: 0.875rem;
+  color: var(--muted-foreground);
+}
+
+.card-content {
+  padding: 1.5rem;
+  padding-top: 0;
+}
+
+.card-footer {
+  display: flex;
+  align-items: center;
+  padding: 1.5rem;
+  padding-top: 0;
+}
+
+/* Input Styles */
+.input-modern {
+  display: flex;
+  height: 2.5rem;
+  width: 100%;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--input);
+  background-color: var(--background);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  transition: all 0.2s ease;
+}
+
+.input-modern::placeholder {
+  color: var(--muted-foreground);
+}
+
+.input-modern:focus-visible {
+  outline: none;
+  border-color: var(--ring);
+  box-shadow: 0 0 0 2px var(--ring);
+}
+
+.input-modern:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Label Styles */
+.label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--foreground);
+}
+
+/* Dropdown Styles */
+.dropdown-content {
+  z-index: 50;
+  min-width: 8rem;
+  overflow: hidden;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--border);
+  background-color: var(--popover);
+  padding: 0.25rem;
+  color: var(--popover-foreground);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dropdown-item {
+  position: relative;
+  display: flex;
+  cursor: default;
+  user-select: none;
+  align-items: center;
+  border-radius: 0.125rem;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.875rem;
+  outline: none;
+  transition: background-color 0.15s ease;
+}
+
+.dropdown-item:focus {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.dropdown-item:hover {
+  background-color: var(--accent);
+  color: var(--accent-foreground);
+}
+
+/* Utility Classes */
+.text-foreground { 
+  color: var(--foreground); 
+}
+
+.text-muted-foreground { 
+  color: var(--muted-foreground); 
+}
+
+.text-primary { 
+  color: var(--primary); 
+}
+
+.bg-background { 
+  background-color: var(--background); 
+}
+
+.bg-muted { 
+  background-color: var(--muted); 
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(to right, var(--primary), oklch(0.60 0.08 145));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Hover Effects */
+.hover-scale {
+  transition: transform 0.2s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-lift {
+  transition: all 0.2s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Loading States */
+.loading-dots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.loading-dots span {
+  height: 0.5rem;
+  width: 0.5rem;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Spacing utilities */
+.space-y-2 > * + * {
+  margin-top: 0.5rem;
+}
+
+.space-y-4 > * + * {
+  margin-top: 1rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+.mt-2 {
+  margin-top: 0.5rem;
+}
+
+.mt-4 {
+  margin-top: 1rem;
+}
+
+.mt-6 {
+  margin-top: 1.5rem;
+}
+
+.mt-8 {
+  margin-top: 2rem;
+}
+
+.w-4 {
+  width: 1rem;
+}
+
+.h-4 {
+  height: 1rem;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.relative {
+  position: relative;
+}
+
+.overflow-hidden {
+  overflow: hidden;
+}
+
+.p-0 {
+  padding: 0;
+}
+
+.mr-1 {
+  margin-right: 0.25rem;
+}
+
+.mr-2 {
+  margin-right: 0.5rem;
+}

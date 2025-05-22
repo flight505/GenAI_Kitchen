@@ -10,7 +10,6 @@ import { useImageHistory } from "../../hooks/useImageHistory";
 import { CompareSlider } from "../../components/CompareSlider";
 import Footer from "../../components/Footer";
 import Header from "../../components/Header";
-import LoadingDots from "../../components/LoadingDots";
 import ResizablePanel from "../../components/ResizablePanel";
 import Toggle from "../../components/Toggle";
 import appendNewToName from "../../utils/appendNewToName";
@@ -32,7 +31,7 @@ import {
   hardwareFinishes,
   generatePromptFromSelections
 } from "../../utils/kitchenTypes";
-import MaskDrawingCanvas from "../../components/MaskDrawingCanvas";
+import ModernInpaintUI from "../../components/ModernInpaintUI";
 
 const options: UploadWidgetConfig = {
   apiKey: !!process.env.NEXT_PUBLIC_UPLOAD_API_KEY
@@ -270,9 +269,9 @@ export default function DreamPage() {
   return (
     <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
       <Header />
-      <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-4 sm:mb-0 mb-8">
-        <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-normal text-slate-100 sm:text-6xl mb-5">
-          Generate your <span className="text-blue-600">dream</span> kitchen
+      <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-4 sm:mb-0 mb-8 bg-background">
+        <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-tight text-foreground sm:text-6xl mb-5">
+          Generate your <span className="gradient-text">dream</span> kitchen
         </h1>
         <ResizablePanel>
           <AnimatePresence mode="wait">
@@ -287,7 +286,7 @@ export default function DreamPage() {
                         height={30}
                         alt="1 icon"
                       />
-                      <p className="text-left font-medium">
+                      <p className="text-left font-medium text-foreground">
                         Design your kitchen.
                       </p>
                     </div>
@@ -338,7 +337,7 @@ export default function DreamPage() {
                         height={30}
                         alt="2 icon"
                       />
-                      <p className="text-left font-medium">
+                      <p className="text-left font-medium text-foreground">
                         Upload a picture of your kitchen.
                       </p>
                     </div>
@@ -346,7 +345,7 @@ export default function DreamPage() {
                 </>
               )}
               {restoredImage && (
-                <div>
+                <div className="text-foreground font-medium">
                   Here's your custom-designed <b>kitchen</b> based on your selections!
                 </div>
               )}
@@ -380,95 +379,94 @@ export default function DreamPage() {
               )}
               {restoredImage && originalPhoto && !sideBySide && (
                 <div className="flex sm:space-x-4 sm:flex-row flex-col">
-                  <div>
-                    <h2 className="mb-1 font-medium text-lg">Original Kitchen</h2>
-                    <Image
-                      alt="original kitchen photo"
-                      src={originalPhoto}
-                      className="rounded-2xl relative w-full h-96"
-                      width={475}
-                      height={475}
-                      style={{ width: 'auto', height: 'auto' }}
-                    />
-                  </div>
-                  <div className="sm:mt-0 mt-8">
-                    <h2 className="mb-1 font-medium text-lg">Generated Kitchen</h2>
-                    <a href={restoredImage} target="_blank" rel="noreferrer">
+                  <div className="card overflow-hidden">
+                    <div className="card-header">
+                      <h2 className="card-title text-lg">Original Kitchen</h2>
+                    </div>
+                    <div className="card-content p-0">
                       <Image
-                        alt="generated kitchen"
-                        src={restoredImage}
-                        className="rounded-2xl relative sm:mt-0 mt-2 cursor-zoom-in w-full h-96"
+                        alt="original kitchen photo"
+                        src={originalPhoto}
+                        className="w-full h-96 object-cover"
                         width={475}
                         height={475}
-                        style={{ width: 'auto', height: 'auto' }}
-                        onLoadingComplete={() => setRestoredLoaded(true)}
+                        style={{ width: '100%', height: 'auto' }}
                       />
-                    </a>
-                    {editMode && (
-                      <div className="mt-4">
-                        <input
-                          type="text"
-                          placeholder="Describe what to change (e.g., 'make the cabinets white')"
-                          value={inpaintPrompt}
-                          onChange={(e) => setInpaintPrompt(e.target.value)}
-                          className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                        <MaskDrawingCanvas
-                          imageUrl={restoredImage}
-                          onMaskGenerated={inpaintPhoto}
+                    </div>
+                  </div>
+                  <div className="sm:mt-0 mt-8 card overflow-hidden">
+                    <div className="card-header">
+                      <h2 className="card-title text-lg">Generated Kitchen</h2>
+                    </div>
+                    <div className="card-content p-0">
+                      <a href={restoredImage} target="_blank" rel="noreferrer" className="block hover-scale">
+                        <Image
+                          alt="generated kitchen"
+                          src={restoredImage}
+                          className="w-full h-96 object-cover cursor-zoom-in"
                           width={475}
                           height={475}
+                          style={{ width: '100%', height: 'auto' }}
+                          onLoadingComplete={() => setRestoredLoaded(true)}
                         />
-                      </div>
-                    )}
+                      </a>
+                    </div>
                   </div>
                 </div>
               )}
+              {editMode && restoredImage && (
+                <ModernInpaintUI
+                  imageUrl={restoredImage}
+                  onMaskGenerated={(maskUrl, prompt) => {
+                    setInpaintPrompt(prompt);
+                    inpaintPhoto(maskUrl);
+                  }}
+                  isProcessing={inpainting}
+                />
+              )}
               {loading && (
-                <button
-                  disabled
-                  className="bg-unoform-sage rounded-lg text-white font-medium px-4 pt-2 pb-3 mt-8 w-40"
-                >
-                  <span className="pt-4">
-                    <LoadingDots color="white" style="large" />
-                  </span>
-                </button>
+                <div className="mt-8 flex flex-col items-center">
+                  <div className="loading-dots text-primary">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-2">Generating your kitchen design...</p>
+                </div>
               )}
                       {inpainting && (
           <div className="mt-6">
-            <p className="text-sm text-unoform-gray-medium mb-2">Applying your changes...</p>
-            <button
-              disabled
-              className="bg-unoform-sage rounded-lg text-white font-medium px-4 pt-2 pb-3 w-40"
-            >
-              <span className="pt-4">
-                <LoadingDots color="white" style="large" />
-              </span>
-            </button>
+            <div className="flex flex-col items-center">
+              <div className="loading-dots text-primary">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">Applying your changes...</p>
+            </div>
           </div>
         )}
         
         {generating && (
           <div className="mt-6">
-            <p className="text-sm text-unoform-gray-medium mb-2">Generating variation...</p>
-            <button
-              disabled
-              className="bg-unoform-sage rounded-lg text-white font-medium px-4 pt-2 pb-3 w-40"
-            >
-              <span className="pt-4">
-                <LoadingDots color="white" style="large" />
-              </span>
-            </button>
+            <div className="flex flex-col items-center">
+              <div className="loading-dots text-primary">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">Generating variation...</p>
+            </div>
           </div>
         )}
               {error && (
                 <div
-                  className="bg-unoform-beige-50 border border-unoform-beige-200 text-unoform-charcoal px-4 py-3 rounded-lg mt-8"
+                  className="card bg-destructive/10 border-destructive/20 px-4 py-3 mt-8"
                   role="alert"
                 >
                   <span className="block sm:inline">{error}</span>
                   {error.includes("daily limit") && (
-                    <span className="block mt-2 text-sm text-unoform-gray-medium">
+                    <span className="block mt-2 text-sm text-muted-foreground">
                       Rate limiting helps us maintain service quality. Thank you for your understanding.
                     </span>
                   )}
@@ -485,7 +483,7 @@ export default function DreamPage() {
                       setEditMode(false);
                       resetHistory();
                     }}
-                    className="bg-blue-500 rounded-full text-white font-medium px-4 py-2 mt-8 hover:bg-blue-500/80 transition"
+                    className="btn-default btn-lg mt-8 hover-lift"
                   >
                     Generate New Kitchen
                   </button>
@@ -496,10 +494,10 @@ export default function DreamPage() {
                     <button
                       onClick={handleUndo}
                       disabled={!canUndo}
-                      className={`rounded-full font-medium px-4 py-2 mt-8 transition ${
+                      className={`btn-md mt-8 ${
                         canUndo 
-                          ? "bg-gray-600 text-white hover:bg-gray-700" 
-                          : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                          ? "btn-secondary" 
+                          : "btn-secondary opacity-50 cursor-not-allowed"
                       }`}
                       title="Undo (Ctrl/Cmd + Z)"
                     >
@@ -508,10 +506,10 @@ export default function DreamPage() {
                     <button
                       onClick={handleRedo}
                       disabled={!canRedo}
-                      className={`rounded-full font-medium px-4 py-2 mt-8 transition ${
+                      className={`btn-md mt-8 ${
                         canRedo 
-                          ? "bg-gray-600 text-white hover:bg-gray-700" 
-                          : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                          ? "btn-secondary" 
+                          : "btn-secondary opacity-50 cursor-not-allowed"
                       }`}
                       title="Redo (Ctrl/Cmd + Y)"
                     >
@@ -524,16 +522,16 @@ export default function DreamPage() {
                           appendNewToName(photoName!)
                         );
                       }}
-                      className="bg-white rounded-full text-black border font-medium px-4 py-2 mt-8 hover:bg-gray-100 transition"
+                      className="btn-outline btn-md mt-8 hover-lift"
                     >
                       Download Generated Kitchen
                     </button>
                                   <button
                 onClick={() => setEditMode(!editMode)}
-                className={`rounded-full font-medium px-4 py-2 mt-8 transition ${
+                className={`btn-md mt-8 ${
                   editMode 
-                    ? "bg-red-500 text-white hover:bg-red-600" 
-                    : "bg-green-500 text-white hover:bg-green-600"
+                    ? "btn-destructive" 
+                    : "btn-default"
                 }`}
               >
                 {editMode ? "Cancel Edit" : "Edit with Inpainting"}
@@ -542,7 +540,7 @@ export default function DreamPage() {
                 <button
                   onClick={generateVariation}
                   disabled={generating}
-                  className="bg-purple-500 rounded-full text-white font-medium px-4 py-2 mt-8 hover:bg-purple-600 transition"
+                  className="btn-secondary btn-md mt-8 hover-scale"
                 >
                   Generate Variation
                 </button>

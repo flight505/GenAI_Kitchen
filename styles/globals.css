@@ -1,17 +1,72 @@
-@import './design-system.css';
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
+@import './modern-design-system.css';
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* These are valid Tailwind directives */
+/* stylelint-disable at-rule-no-unknown */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* stylelint-enable at-rule-no-unknown */
+
+/* Global transitions and animations */
+* {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Focus states */
+*:focus-visible {
+  outline: 2px solid var(--color-interactive-primary);
+  outline-offset: 2px;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better text rendering */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Image optimization */
+img {
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Button and interactive element animations */
+button, a, input, select, textarea {
+  transition: all 0.2s ease;
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+/* Loading animation improvements */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
 
 @media (min-width: 400px) {
   .background-gradient::before {
     background: radial-gradient(
       20% 50% at 50% 50%,
-      rgba(71, 127, 247, 0.376) 0%,
-      rgba(37, 38, 44, 0) 100%
+      rgba(168, 181, 160, 0.15) 0%,
+      rgba(250, 250, 250, 0) 100%
     );
     z-index: -10;
     content: "";

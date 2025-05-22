@@ -23,17 +23,17 @@ export default function KitchenDropDown<T extends string>({
     <Listbox value={value} onChange={setValue}>
       {({ open }) => (
         <>
-          <Listbox.Label className="block text-sm font-medium text-gray-400">
+          <Listbox.Label className="label">
             {label}
           </Listbox.Label>
           <div className="relative mt-1">
-            <Listbox.Button className="relative w-full cursor-default rounded-md border border-gray-800 bg-gray-900 py-2 pl-3 pr-10 text-left shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 sm:text-sm">
+            <Listbox.Button className="input-modern cursor-default text-left pr-10 hover:border-primary/50 transition-colors">
               <span className="flex items-center">
                 <span className="ml-1 block truncate">{value}</span>
               </span>
               <span className="pointer-events-none absolute inset-y-0 right-0 ml-3 flex items-center pr-2">
                 <ChevronUpDownIcon
-                  className="h-5 w-5 text-gray-400"
+                  className="h-5 w-5 text-muted-foreground"
                   aria-hidden="true"
                 />
               </span>
@@ -46,19 +46,16 @@ export default function KitchenDropDown<T extends string>({
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <Listbox.Options className="absolute z-10 mt-1 max-h-56 w-full overflow-auto rounded-md bg-gray-900 py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+              <Listbox.Options className="dropdown-content absolute mt-1 max-h-56 w-full overflow-auto">
                 {options.map((option) => (
                   <Listbox.Option
                     key={option}
                     className={({ active }) =>
-                      classNames(
-                        active ? "text-white bg-blue-600" : "text-gray-300",
-                        "relative cursor-default select-none py-2 pl-3 pr-9"
-                      )
+                      "dropdown-item"
                     }
                     value={option}
                   >
-                    {({ selected, active }) => (
+                    {({ selected }) => (
                       <>
                         <div className="flex items-center">
                           <span
@@ -74,7 +71,7 @@ export default function KitchenDropDown<T extends string>({
                         {selected ? (
                           <span
                             className={classNames(
-                              active ? "text-white" : "text-blue-600",
+                              "text-primary",
                               "absolute inset-y-0 right-0 flex items-center pr-4"
                             )}
                           >

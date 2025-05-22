@@ -1,7 +1,19 @@
 #!/usr/bin/env node
 
 // Test script to validate the build environment and dependencies
+const fs = require('fs');
+const dotenv = require('dotenv');
+
 console.log('Starting build validation tests...');
+
+// Load environment variables from .env.local or .env
+if (fs.existsSync('.env.local')) {
+  console.log('📄 Loading environment variables from .env.local');
+  dotenv.config({ path: '.env.local' });
+} else if (fs.existsSync('.env')) {
+  console.log('📄 Loading environment variables from .env');
+  dotenv.config({ path: '.env' });
+}
 
 // Check environment variables
 const requiredEnvVars = [

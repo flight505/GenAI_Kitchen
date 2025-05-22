@@ -55,6 +55,7 @@ export default function DreamPage() {
   const [inpainting, setInpainting] = useState<boolean>(false);
   const [editMode, setEditMode] = useState<boolean>(false);
   const [inpaintPrompt, setInpaintPrompt] = useState<string>("");
+  const [generating, setGenerating] = useState<boolean>(false);
 
   const UploadDropZone = () => (
     <UploadDropzone
@@ -134,6 +135,33 @@ export default function DreamPage() {
     }
     setInpainting(false);
     setEditMode(false);
+  }
+
+  async function generateVariation() {
+    if (!restoredImage) {
+      setError("No image to generate variations from");
+      return;
+    }
+
+    setGenerating(true);
+    const res = await fetch("/variation", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        imageUrl: restoredImage,
+        prompt: `a ${theme.toLowerCase()} kitchen`,
+      }),
+    });
+
+    let newPhoto = await res.json();
+    if (res.status !== 200) {
+      setError(newPhoto);
+    } else {
+      setRestoredImage(typeof newPhoto === 'string' ? newPhoto : newPhoto[0]);
+    }
+    setGenerating(false);
   }
 
   return (
@@ -270,19 +298,33 @@ export default function DreamPage() {
                   </span>
                 </button>
               )}
-              {inpainting && (
-                <div className="mt-6">
-                  <p className="text-sm text-gray-500 mb-2">Applying your changes...</p>
-                  <button
-                    disabled
-                    className="bg-blue-500 rounded-full text-white font-medium px-4 pt-2 pb-3 w-40"
-                  >
-                    <span className="pt-4">
-                      <LoadingDots color="white" style="large" />
-                    </span>
-                  </button>
-                </div>
-              )}
+                      {inpainting && (
+          <div className="mt-6">
+            <p className="text-sm text-gray-500 mb-2">Applying your changes...</p>
+            <button
+              disabled
+              className="bg-blue-500 rounded-full text-white font-medium px-4 pt-2 pb-3 w-40"
+            >
+              <span className="pt-4">
+                <LoadingDots color="white" style="large" />
+              </span>
+            </button>
+          </div>
+        )}
+        
+        {generating && (
+          <div className="mt-6">
+            <p className="text-sm text-gray-500 mb-2">Generating variation...</p>
+            <button
+              disabled
+              className="bg-blue-500 rounded-full text-white font-medium px-4 pt-2 pb-3 w-40"
+            >
+              <span className="pt-4">
+                <LoadingDots color="white" style="large" />
+              </span>
+            </button>
+          </div>
+        )}
               {error && (
                 <div
                   className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mt-8"
@@ -319,16 +361,25 @@ export default function DreamPage() {
                     >
                       Download Generated Kitchen
                     </button>
-                    <button
-                      onClick={() => setEditMode(!editMode)}
-                      className={`rounded-full font-medium px-4 py-2 mt-8 transition ${
-                        editMode 
-                          ? "bg-red-500 text-white hover:bg-red-600" 
-                          : "bg-green-500 text-white hover:bg-green-600"
-                      }`}
-                    >
-                      {editMode ? "Cancel Edit" : "Edit with Inpainting"}
-                    </button>
+                                  <button
+                onClick={() => setEditMode(!editMode)}
+                className={`rounded-full font-medium px-4 py-2 mt-8 transition ${
+                  editMode 
+                    ? "bg-red-500 text-white hover:bg-red-600" 
+                    : "bg-green-500 text-white hover:bg-green-600"
+                }`}
+              >
+                {editMode ? "Cancel Edit" : "Edit with Inpainting"}
+              </button>
+              {!editMode && (
+                <button
+                  onClick={generateVariation}
+                  disabled={generating}
+                  className="bg-purple-500 rounded-full text-white font-medium px-4 py-2 mt-8 hover:bg-purple-600 transition"
+                >
+                  Generate Variation
+                </button>
+              )}
                   </>
                 )}
               </div>

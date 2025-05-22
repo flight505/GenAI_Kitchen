@@ -81,6 +81,55 @@
 * [x] **UI/UX Considerations:** Place the Undo/Redo buttons in the UI (perhaps near the image or in a toolbar). Use familiar icons (e.g. arrow curling left for Undo, right for Redo). Possibly add keyboard shortcuts (Ctrl+Z / Ctrl+Y) for convenience, if easily doable.
 * [x] **Test History Navigation:** Go through a full workflow: upload an original kitchen image, generate a design (step 1), maybe apply an inpainting edit (step 2), maybe a variation (step 3). Then click Undo – the image should revert to the step 2 result. Click Undo again – back to step 1 result. Click Redo – should go forward to step 2, etc. Ensure no off-by-one errors in the stack management. The original image should remain accessible (e.g. multiple undos eventually get back to the upload). Fix any bugs like skipping images or failing to clear redo when a new branch is created.
 
+## Scandinavian Design UI & Unoform Branding
+
+* [ ] **Update Color Scheme:** Replace the current mixed color palette with a cohesive Scandinavian design system. Use a minimalist palette focused on:
+  * [ ] Primary: Soft whites and light grays (#FAFAFA, #F5F5F5)
+  * [ ] Secondary: Warm wood tones and natural beiges (#E8DCC6, #D4C4B0)
+  * [ ] Accent: Muted blacks and charcoals for contrast (#2C2C2C, #1A1A1A)
+  * [ ] Interactive: Subtle sage green or dusty blue for CTAs (#A8B5A0 or #9FAEC0)
+
+* [ ] **Redesign Button System:** Create a consistent button hierarchy following Scandinavian minimalism:
+  * [ ] Primary actions: Filled buttons with subtle shadows and hover states
+  * [ ] Secondary actions: Ghost buttons with thin borders
+  * [ ] Tertiary actions: Text-only buttons with underline on hover
+  * [ ] Ensure all buttons have consistent padding, border radius (subtle, 4-8px), and typography
+
+* [ ] **Update Typography:** Implement a clean, modern font system:
+  * [ ] Use a Scandinavian-friendly font like Inter, Helvetica Neue, or custom Unoform font if available
+  * [ ] Establish clear hierarchy with limited font weights (Regular 400, Medium 500, Semibold 600)
+  * [ ] Increase white space and line height for better readability
+
+* [ ] **Redesign Homepage/Landing:** Create a Unoform-branded experience:
+  * [ ] Replace generic "dream kitchen" messaging with Unoform-specific copy
+  * [ ] Add Unoform logo and brand colors
+  * [ ] Include a hero section showcasing Unoform's signature kitchen style
+  * [ ] Add brief introduction text about Unoform's Danish design philosophy
+  * [ ] Update page title and meta descriptions for Unoform
+
+* [ ] **Remove GitHub References:** Clean up developer-focused elements:
+  * [ ] Remove "Star on GitHub" buttons and links
+  * [ ] Remove any open-source project references
+  * [ ] Replace footer GitHub links with Unoform-relevant links
+
+* [ ] **Add Social Media Integration:** Enable quick social sharing for Unoform:
+  * [ ] Add "Share on Instagram" functionality that formats the image with Unoform branding
+  * [ ] Add "Share on Twitter/X" with pre-filled Unoform hashtags and mentions
+  * [ ] Include download options optimized for social media dimensions (1:1, 16:9, 9:16)
+  * [ ] Add optional Unoform watermark/logo overlay for shared images
+
+* [ ] **Update Component Styling:** Apply Scandinavian design principles throughout:
+  * [ ] Simplify dropdown designs with cleaner borders and subtle shadows
+  * [ ] Update loading states with minimal, elegant animations
+  * [ ] Redesign panels and cards with more white space and subtle borders
+  * [ ] Ensure consistent spacing using an 8px grid system
+
+* [ ] **Enhance Visual Feedback:** Improve user experience with subtle interactions:
+  * [ ] Add smooth transitions for all interactive elements (0.2s ease)
+  * [ ] Implement subtle hover states that don't distract
+  * [ ] Use minimal, purposeful animations
+  * [ ] Ensure proper focus states for accessibility
+
 ## Prompt Templating & Unoform Styling
 
 * [ ] **Define Style Token/Suffix:** Establish a consistent way to inject **Unoform's style** into every prompt. For instance, choose a trigger token like `<unoform>` or a phrase like "in the Unoform style". (If a fine-tuned model uses a special token, use that; otherwise a phrase works.) This will ensure the AI outputs align with Unoform's signature design.

@@ -9,5 +9,19 @@
   ],
   "github": {
     "silent": true
+  },
+  "env": {
+    "NEXT_PUBLIC_UPLOAD_API_KEY": "free"
+  },
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "build": {
+    "env": {
+      "NODE_OPTIONS": "--max-old-space-size=4096"
+    }
   }
 }

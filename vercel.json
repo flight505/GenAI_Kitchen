@@ -23,5 +23,6 @@
     "env": {
       "NODE_OPTIONS": "--max-old-space-size=4096"
     }
-  }
+  },
+  "ignoreCommand": "node -e \"if(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_URL.includes(' ')) { console.log('Error: UPSTASH_REDIS_REST_URL contains spaces. Please fix this environment variable.'); process.exit(1); } else { process.exit(0); }\""
 }

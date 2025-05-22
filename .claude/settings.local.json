@@ -14,7 +14,8 @@
       "Bash(npm run build:*)",
       "Bash(npm update:*)",
       "Bash(pkill:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(node:*)"
     ],
     "deny": []
   }

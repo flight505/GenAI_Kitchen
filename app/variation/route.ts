@@ -49,12 +49,17 @@ export async function POST(request: Request) {
         Authorization: "Token " + process.env.REPLICATE_API_KEY,
       },
       body: JSON.stringify({
-        // Using updated Flux Redux model for generating variations
-        version: "6f495855c80786e455ef26b2d87d757dfa2ef642a6c4caa214d3c1fa2fe6c7c7",
+        // Latest Flux Redux Dev model version
+        version: "5e0c9e8921852de36e1e8de5f62f053672a91118dd06ad2cf9f3439676e068b8",
         input: {
-          image: imageUrl,
+          redux_image: imageUrl,
           prompt: prompt || "",
-          seed: Math.floor(Math.random() * 1000000), // Random seed for variation
+          guidance: 3,
+          num_inference_steps: 28,
+          output_format: "webp",
+          num_outputs: 1,
+          megapixels: "1",
+          aspect_ratio: "custom"
         },
       }),
     });
@@ -103,7 +108,10 @@ export async function POST(request: Request) {
       let jsonFinalResponse = await finalResponse.json();
 
       if (jsonFinalResponse.status === "succeeded") {
-        variationImage = jsonFinalResponse.output;
+        // Flux Redux Dev returns an array of images
+        variationImage = Array.isArray(jsonFinalResponse.output) 
+          ? jsonFinalResponse.output[0] 
+          : jsonFinalResponse.output;
         break;
       } else if (jsonFinalResponse.status === "failed") {
         const errorMsg = jsonFinalResponse.error || "Variation generation failed";

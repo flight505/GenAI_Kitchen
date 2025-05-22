@@ -49,15 +49,16 @@ export async function POST(request: Request) {
         Authorization: "Token " + process.env.REPLICATE_API_KEY,
       },
       body: JSON.stringify({
-        // Using latest Flux Fill Pro model version
-        version: "7a490189237c4fd98f12fea001f64a3c59759ee5538797fa474054a99c0f584f",
+        // Latest Flux Fill Pro model version
+        version: "e5f296dd5a4948fb1227ae9c120227c1d66a6e99273a76ba047740036225e588",
         input: {
           image: imageUrl,
           mask: maskImage,
           prompt: prompt,
-          steps: 50,
-          guidance: 3.0,
-          safety_tolerance: 5, // Permissive level for kitchen content
+          num_inference_steps: 50,
+          guidance_scale: 3.0,
+          output_format: "webp",
+          output_quality: 90
         },
       }),
     });

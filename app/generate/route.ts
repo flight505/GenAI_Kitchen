@@ -53,15 +53,15 @@ export async function POST(request: Request) {
         Authorization: "Token " + process.env.REPLICATE_API_KEY,
       },
       body: JSON.stringify({
-        // Updated to latest Flux Canny Pro model version
-        // Using the stable released version rather than a development version
-        version: "b490e8c7b82f557c9e4b55b00060a93aba54f8c95642dd19d308b67184b86189",
+        // Latest Flux Canny Pro model version
+        version: "ad37f8110aa64f89adf2613465d7b18b185959f85c5503e7e45b9a0a7044b269",
         input: {
-          image: imageUrl,
+          control_image: imageUrl,
           prompt: prompt,
-          steps: 30,
-          guidance: 8.0,
-          safety_tolerance: 5
+          num_inference_steps: 30,
+          guidance_scale: 8.0,
+          output_format: "webp",
+          output_quality: 90
         },
       }),
     });

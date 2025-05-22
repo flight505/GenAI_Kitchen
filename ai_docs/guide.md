@@ -137,3 +137,19 @@
   * [ ] Test the end-to-end flow now using the fine-tuned model via Replicate. Ensure that the `prompt` including `<unoform>` now produces results that are unmistakably in Unoform style, even with challenging prompts. If something fails (e.g. model not loading on Replicate), debug the deployment (check logs, memory, etc.) or adjust the Cog config.
 * [ ] **License Documentation:** Clearly document the licensing of the fine-tuned model. Since we chose FLUX Schnell (Apache 2.0), note that the fine-tuned model can be used commercially. If any part of the pipeline still uses a non-commercial component (e.g. if we temporarily use Flux Dev for a test), call that out and replace it before production. In the repository README or documentation, include a note that *"The Unoform fine-tuned model is based on FLUX Schnell (Apache 2.0), fine-tuned on Unoform's proprietary images."*.
 * [ ] **Final Integration Testing:** Do a complete run-through of the application with the fine-tuned model in place. Upload a kitchen image, select design options, generate the redesign, use inpainting, variation, etc. Verify that the results are improved by the fine-tune (more aligned with Unoform style than before). Collect a few example outputs for internal demo. If all looks good, the GenAI Kitchen application is fully implemented and ready for use!
+
+## Implementation Notes and Status
+
+We have successfully implemented:
+
+1. **Codebase Cleanup & Setup**: Upgraded dependencies, removed legacy code, simplified the app to focus on kitchens, updated branding, and removed obsolete model references.
+
+2. **Deployment on Vercel**: Set up the Vercel project, configured environment variables, and set up Upstash Redis for rate limiting.
+
+3. **Flux Canny Pro Integration**: Replaced Stable Diffusion API calls with Flux Canny Pro, updated the UI, and tested the generation flow.
+
+4. **Flux Fill Pro Inpainting Feature**: Created a new inpainting API route, implemented a mask drawing canvas component, and integrated the functionality into the UI.
+
+5. **Flux Redux Variation Feature**: Added a variation endpoint, implemented variation calls, and added UI controls for generating variations.
+
+**Deployment Note**: While all features are working locally, there are some issues with the Vercel deployment build process. This may require further investigation.

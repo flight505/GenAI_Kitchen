@@ -96,7 +96,7 @@ export default function DreamPage() {
     if (res.status !== 200) {
       setError(newPhoto);
     } else {
-      setRestoredImage(newPhoto[1]);
+      setRestoredImage(typeof newPhoto === 'string' ? newPhoto : newPhoto[0]);
     }
     setTimeout(() => {
       setLoading(false);
@@ -186,9 +186,9 @@ export default function DreamPage() {
               {restoredImage && originalPhoto && !sideBySide && (
                 <div className="flex sm:space-x-4 sm:flex-row flex-col">
                   <div>
-                    <h2 className="mb-1 font-medium text-lg">Original Room</h2>
+                    <h2 className="mb-1 font-medium text-lg">Original Kitchen</h2>
                     <Image
-                      alt="original photo"
+                      alt="original kitchen photo"
                       src={originalPhoto}
                       className="rounded-2xl relative w-full h-96"
                       width={475}
@@ -196,10 +196,10 @@ export default function DreamPage() {
                     />
                   </div>
                   <div className="sm:mt-0 mt-8">
-                    <h2 className="mb-1 font-medium text-lg">Generated Room</h2>
+                    <h2 className="mb-1 font-medium text-lg">Generated Kitchen</h2>
                     <a href={restoredImage} target="_blank" rel="noreferrer">
                       <Image
-                        alt="restored photo"
+                        alt="generated kitchen"
                         src={restoredImage}
                         className="rounded-2xl relative sm:mt-0 mt-2 cursor-zoom-in w-full h-96"
                         width={475}
@@ -239,7 +239,7 @@ export default function DreamPage() {
                     }}
                     className="bg-blue-500 rounded-full text-white font-medium px-4 py-2 mt-8 hover:bg-blue-500/80 transition"
                   >
-                    Generate New Room
+                    Generate New Kitchen
                   </button>
                 )}
                 {restoredLoaded && (
@@ -252,7 +252,7 @@ export default function DreamPage() {
                     }}
                     className="bg-white rounded-full text-black border font-medium px-4 py-2 mt-8 hover:bg-gray-100 transition"
                   >
-                    Download Generated Room
+                    Download Generated Kitchen
                   </button>
                 )}
               </div>

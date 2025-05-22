@@ -135,9 +135,15 @@ export default function DreamPage() {
       }),
     });
 
+    if (res.status === 429) {
+      setError("You've reached the daily limit of 5 requests. Please try again tomorrow.");
+      setLoading(false);
+      return;
+    }
+
     let newPhoto = await res.json();
     if (res.status !== 200) {
-      setError(newPhoto);
+      setError(typeof newPhoto === 'string' ? newPhoto : newPhoto.message || 'An error occurred');
     } else {
       const imageUrl = typeof newPhoto === 'string' ? newPhoto : newPhoto[0];
       setRestoredImage(imageUrl);
@@ -369,6 +375,7 @@ export default function DreamPage() {
                   className="rounded-2xl h-96"
                   width={475}
                   height={475}
+                  style={{ width: 'auto', height: 'auto' }}
                 />
               )}
               {restoredImage && originalPhoto && !sideBySide && (
@@ -381,6 +388,7 @@ export default function DreamPage() {
                       className="rounded-2xl relative w-full h-96"
                       width={475}
                       height={475}
+                      style={{ width: 'auto', height: 'auto' }}
                     />
                   </div>
                   <div className="sm:mt-0 mt-8">
@@ -392,6 +400,7 @@ export default function DreamPage() {
                         className="rounded-2xl relative sm:mt-0 mt-2 cursor-zoom-in w-full h-96"
                         width={475}
                         height={475}
+                        style={{ width: 'auto', height: 'auto' }}
                         onLoadingComplete={() => setRestoredLoaded(true)}
                       />
                     </a>
@@ -418,7 +427,7 @@ export default function DreamPage() {
               {loading && (
                 <button
                   disabled
-                  className="bg-blue-500 rounded-full text-white font-medium px-4 pt-2 pb-3 mt-8 w-40"
+                  className="bg-unoform-sage rounded-lg text-white font-medium px-4 pt-2 pb-3 mt-8 w-40"
                 >
                   <span className="pt-4">
                     <LoadingDots color="white" style="large" />
@@ -427,10 +436,10 @@ export default function DreamPage() {
               )}
                       {inpainting && (
           <div className="mt-6">
-            <p className="text-sm text-gray-500 mb-2">Applying your changes...</p>
+            <p className="text-sm text-unoform-gray-medium mb-2">Applying your changes...</p>
             <button
               disabled
-              className="bg-blue-500 rounded-full text-white font-medium px-4 pt-2 pb-3 w-40"
+              className="bg-unoform-sage rounded-lg text-white font-medium px-4 pt-2 pb-3 w-40"
             >
               <span className="pt-4">
                 <LoadingDots color="white" style="large" />
@@ -441,10 +450,10 @@ export default function DreamPage() {
         
         {generating && (
           <div className="mt-6">
-            <p className="text-sm text-gray-500 mb-2">Generating variation...</p>
+            <p className="text-sm text-unoform-gray-medium mb-2">Generating variation...</p>
             <button
               disabled
-              className="bg-blue-500 rounded-full text-white font-medium px-4 pt-2 pb-3 w-40"
+              className="bg-unoform-sage rounded-lg text-white font-medium px-4 pt-2 pb-3 w-40"
             >
               <span className="pt-4">
                 <LoadingDots color="white" style="large" />
@@ -454,10 +463,15 @@ export default function DreamPage() {
         )}
               {error && (
                 <div
-                  className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl mt-8"
+                  className="bg-unoform-beige-50 border border-unoform-beige-200 text-unoform-charcoal px-4 py-3 rounded-lg mt-8"
                   role="alert"
                 >
                   <span className="block sm:inline">{error}</span>
+                  {error.includes("daily limit") && (
+                    <span className="block mt-2 text-sm text-unoform-gray-medium">
+                      Rate limiting helps us maintain service quality. Thank you for your understanding.
+                    </span>
+                  )}
                 </div>
               )}
               <div className="flex space-x-2 justify-center">

@@ -50,7 +50,7 @@ export default function DreamPage() {
   const [error, setError] = useState<string | null>(null);
   const [photoName, setPhotoName] = useState<string | null>(null);
   const [theme, setTheme] = useState<themeType>("Modern");
-  const [room, setRoom] = useState<roomType>("Living Room");
+  const [room] = useState<roomType>("Kitchen");
 
   const UploadDropZone = () => (
     <UploadDropzone
@@ -85,7 +85,11 @@ export default function DreamPage() {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ imageUrl: fileUrl, theme, room }),
+      body: JSON.stringify({ 
+        imageUrl: fileUrl, 
+        theme, 
+        room 
+      }),
     });
 
     let newPhoto = await res.json();
@@ -104,7 +108,7 @@ export default function DreamPage() {
       <Header />
       <main className="flex flex-1 w-full flex-col items-center justify-center text-center px-4 mt-4 sm:mb-0 mb-8">
         <h1 className="mx-auto max-w-4xl font-display text-4xl font-bold tracking-normal text-slate-100 sm:text-6xl mb-5">
-          Generate your <span className="text-blue-600">dream</span> room
+          Generate your <span className="text-blue-600">dream</span> kitchen
         </h1>
         <ResizablePanel>
           <AnimatePresence mode="wait">
@@ -120,7 +124,7 @@ export default function DreamPage() {
                         alt="1 icon"
                       />
                       <p className="text-left font-medium">
-                        Choose your room theme.
+                        Choose your kitchen style.
                       </p>
                     </div>
                     <DropDown
@@ -131,34 +135,16 @@ export default function DreamPage() {
                       themes={themes}
                     />
                   </div>
-                  <div className="space-y-4 w-full max-w-sm">
-                    <div className="flex mt-10 items-center space-x-3">
+                  <div className="mt-4 w-full max-w-sm">
+                    <div className="flex mt-6 w-96 items-center space-x-3">
                       <Image
                         src="/number-2-white.svg"
                         width={30}
                         height={30}
-                        alt="1 icon"
+                        alt="2 icon"
                       />
                       <p className="text-left font-medium">
-                        Choose your room type.
-                      </p>
-                    </div>
-                    <DropDown
-                      theme={room}
-                      setTheme={(newRoom) => setRoom(newRoom as typeof room)}
-                      themes={rooms}
-                    />
-                  </div>
-                  <div className="mt-4 w-full max-w-sm">
-                    <div className="flex mt-6 w-96 items-center space-x-3">
-                      <Image
-                        src="/number-3-white.svg"
-                        width={30}
-                        height={30}
-                        alt="1 icon"
-                      />
-                      <p className="text-left font-medium">
-                        Upload a picture of your room.
+                        Upload a picture of your kitchen.
                       </p>
                     </div>
                   </div>
@@ -166,8 +152,8 @@ export default function DreamPage() {
               )}
               {restoredImage && (
                 <div>
-                  Here's your remodeled <b>{room.toLowerCase()}</b> in the{" "}
-                  <b>{theme.toLowerCase()}</b> theme!{" "}
+                  Here's your remodeled <b>kitchen</b> in the{" "}
+                  <b>{theme.toLowerCase()}</b> style!{" "}
                 </div>
               )}
               <div

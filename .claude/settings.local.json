@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(./build-test.sh:*)",
+      "Bash(rm:*)",
+      "Bash(xcodebuild:*)",
+      "Bash(eza:*)"
+    ],
+    "deny": []
+  }
+}

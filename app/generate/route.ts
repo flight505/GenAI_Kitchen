@@ -44,14 +44,13 @@ export async function POST(request: Request) {
       Authorization: "Token " + process.env.REPLICATE_API_KEY,
     },
     body: JSON.stringify({
+      // TODO: Replace with Flux Canny Pro model in the next phase
+      // Current model is Stable Diffusion with ControlNet
       version:
         "854e8727697a057c525cdb45ab037f64ecca770a1769cc52287c2e56472a247b",
       input: {
         image: imageUrl,
-        prompt:
-          room === "Gaming Room"
-            ? "a room for gaming with gaming computers, gaming consoles, and gaming chairs"
-            : `a ${theme.toLowerCase()} ${room.toLowerCase()}`,
+        prompt: `a ${theme.toLowerCase()} kitchen`,
         a_prompt:
           "best quality, extremely detailed, photo from Pinterest, interior, cinematic photo, ultra-detailed, ultra-realistic, award-winning",
         n_prompt:

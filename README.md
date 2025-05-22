@@ -1,21 +1,19 @@
-# Redesign kitchens with AI
+# GenAI Kitchen - Redesign kitchens with AI
 
-This is the previous and open source version of RoomGPT.io (a paid SaaS product). It's the very first version of roomGPT without the auth, payments, or additional features and it's simple to clone, deploy, and play around with.
+This project allows you to transform any kitchen using AI. Upload a photo of your kitchen and see it redesigned in various styles.
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Nutlope/roomGPT&env=REPLICATE_API_KEY&project-name=room-GPT&repo-name=roomGPT)
-
-[![Room GPT](./public/screenshot.png)](https://roomGPT.io)
+[![Kitchen Redesign](./public/screenshot.png)](https://genai-kitchen.vercel.app)
 
 ## How it works
 
-It uses an ML model called [ControlNet](https://github.com/lllyasviel/ControlNet) to generate variations of rooms. This application gives you the ability to upload a photo of any room, which will send it through this ML Model using a Next.js API route, and return your generated room. The ML Model is hosted on [Replicate](https://replicate.com) and [Bytescale](https://www.bytescale.com/) is used for image storage.
+It uses an ML model called [Flux Canny Pro](https://replicate.com/black-forest-labs/flux-canny-pro) to generate styled variations of kitchens. This application gives you the ability to upload a photo of any kitchen, which will send it through this ML Model using a Next.js API route, and return your generated kitchen. The ML Model is hosted on [Replicate](https://replicate.com) and [Bytescale](https://www.bytescale.com/) is used for image storage.
 
 ## Running Locally
 
 ### Cloning the repository the local machine.
 
 ```bash
-git clone https://github.com/Nutlope/roomGPT
+git clone https://github.com/yourusername/GenAI_Kitchen
 ```
 
 ### Creating a account on Replicate to get an API key.
@@ -46,9 +44,9 @@ npm run dev
 
 ## One-Click Deploy
 
-Deploy the example using [Vercel](https://vercel.com?utm_source=github&utm_medium=readme&utm_campaign=vercel-examples):
+Deploy the example using [Vercel](https://vercel.com):
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/Nutlope/roomGPT&env=REPLICATE_API_KEY&project-name=room-GPT&repo-name=roomGPT)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/yourusername/GenAI_Kitchen&env=REPLICATE_API_KEY&project-name=genai-kitchen&repo-name=GenAI_Kitchen)
 
 ## License
 

@@ -2,6 +2,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import redis from "../../utils/redis";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { enhancePromptWithUnoformStyle } from "../../utils/promptTemplating";
 
 // Create a new ratelimiter, that allows 5 requests per 24 hours
 const ratelimit = redis
@@ -52,7 +53,7 @@ export async function POST(request: Request) {
         // Using Flux Fill Pro for inpainting
         version: "10b45d01bb46cffc8d7893b36d720e369d732bb2e48ca3db469a18929eff359d",
         input: {
-          prompt: prompt,
+          prompt: enhancePromptWithUnoformStyle(prompt, 'inpainting'),
           image: imageUrl,
           mask: maskImage,
           steps: 50,

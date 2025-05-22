@@ -2,6 +2,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import redis from "../../utils/redis";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { enhancePromptWithUnoformStyle } from "../../utils/promptTemplating";
 
 // Create a new ratelimiter, that allows 5 requests per 24 hours
 const ratelimit = redis
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
         // Using Flux Pro 1.1 for structure-guided generation
         version: "80a09d66baa990429c2f5ae8a4306bf778a1b3775afd01cc2cc8bdbe9033769c",
         input: {
-          prompt: prompt,
+          prompt: enhancePromptWithUnoformStyle(prompt, 'generation'),
           image_prompt: imageUrl,
           width: 1024,
           height: 1024,

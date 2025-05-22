@@ -1,3 +1,5 @@
+import { enhanceKitchenPrompt } from './promptTemplating';
+
 export type CabinetStyle = 
   | "Modern Flat-Panel"
   | "Classic Shaker"
@@ -88,5 +90,14 @@ export interface KitchenDesignSelections {
 }
 
 export function generatePromptFromSelections(selections: KitchenDesignSelections): string {
-  return `a kitchen with ${selections.cabinetStyle.toLowerCase()} cabinets painted ${selections.cabinetFinish.toLowerCase()}, ${selections.countertop.toLowerCase()} countertops, ${selections.flooring.toLowerCase()} flooring, ${selections.wallColor.toLowerCase()} walls, and ${selections.hardware.toLowerCase()} hardware`;
+  const basePrompt = `a kitchen with ${selections.cabinetStyle.toLowerCase()} cabinets painted ${selections.cabinetFinish.toLowerCase()}, ${selections.countertop.toLowerCase()} countertops, ${selections.flooring.toLowerCase()} flooring, ${selections.wallColor.toLowerCase()} walls, and ${selections.hardware.toLowerCase()} hardware`;
+  
+  return enhanceKitchenPrompt(basePrompt, {
+    cabinetStyle: selections.cabinetStyle,
+    cabinetFinish: selections.cabinetFinish,
+    countertop: selections.countertop,
+    flooring: selections.flooring,
+    wallColor: selections.wallColor,
+    hardware: selections.hardware
+  });
 }

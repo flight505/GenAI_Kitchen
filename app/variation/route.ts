@@ -2,6 +2,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import redis from "../../utils/redis";
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
+import { createStyleConsistentVariation } from "../../utils/promptTemplating";
 
 // Create a new ratelimiter, that allows 5 requests per 24 hours
 const ratelimit = redis
@@ -53,7 +54,7 @@ export async function POST(request: Request) {
         version: "96b56814e57dfa601f3f524f82a2b336ef49012cda68828cb37cde66f481b7cb",
         input: {
           redux_image: imageUrl,
-          prompt: prompt || "",
+          prompt: prompt ? createStyleConsistentVariation(prompt) : "Danish Scandinavian kitchen design",
           guidance: 3,
           num_inference_steps: 28,
           output_format: "webp",

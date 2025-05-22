@@ -11,7 +11,10 @@
       "Bash(eza:*)",
       "Bash(vercel ls:*)",
       "Bash(mv:*)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "Bash(npm update:*)",
+      "Bash(pkill:*)",
+      "Bash(true)"
     ],
     "deny": []
   }

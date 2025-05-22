@@ -2,7 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { UrlBuilder } from "@bytescale/sdk";
 import { UploadWidgetConfig } from "@bytescale/upload-widget";
 import { UploadDropzone } from "@bytescale/upload-widget-react";
@@ -224,7 +224,7 @@ export default function DreamPage() {
   }
 
   // Handle undo action
-  const handleUndo = () => {
+  const handleUndo = useCallback(() => {
     const previousImage = undo();
     if (previousImage) {
       setRestoredImage(previousImage.url);
@@ -232,10 +232,10 @@ export default function DreamPage() {
       setEditMode(false);
       setError(null);
     }
-  };
+  }, [undo]);
 
   // Handle redo action
-  const handleRedo = () => {
+  const handleRedo = useCallback(() => {
     const nextImage = redo();
     if (nextImage) {
       setRestoredImage(nextImage.url);
@@ -243,7 +243,7 @@ export default function DreamPage() {
       setEditMode(false);
       setError(null);
     }
-  };
+  }, [redo]);
 
   // Add keyboard shortcuts
   useEffect(() => {
@@ -259,7 +259,7 @@ export default function DreamPage() {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [canUndo, canRedo]);
+  }, [canUndo, canRedo, handleUndo, handleRedo]);
 
   return (
     <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen">

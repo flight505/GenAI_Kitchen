@@ -8,7 +8,10 @@
       "Bash(./build-test.sh:*)",
       "Bash(rm:*)",
       "Bash(xcodebuild:*)",
-      "Bash(eza:*)"
+      "Bash(eza:*)",
+      "Bash(vercel ls:*)",
+      "Bash(mv:*)",
+      "Bash(npm run build:*)"
     ],
     "deny": []
   }

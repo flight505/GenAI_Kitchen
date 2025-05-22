@@ -2,10 +2,10 @@ import { Analytics } from "@vercel/analytics/react";
 import { Metadata } from "next";
 import "../styles/globals.css";
 
-let title = "GenAI Kitchen";
-let description = "Generate your dream kitchen in seconds.";
-let ogimage = "https://roomgpt-demo.vercel.app/og-image.png";
-let sitename = "GenAIKitchen.io";
+let title = "Unoform Kitchen Designer";
+let description = "Transform your kitchen with Unoform's signature Danish design - clean lines, natural materials, and timeless elegance.";
+let ogimage = "https://genai-kitchen.vercel.app/og-image.png";
+let sitename = "Unoform Kitchen Designer";
 
 export const metadata: Metadata = {
   title,
@@ -37,7 +37,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-[#17181C] text-white">
+      <body className="bg-unoform-white text-unoform-black font-sans">
         {children}
         <Analytics />
       </body>

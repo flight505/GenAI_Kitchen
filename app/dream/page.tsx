@@ -2,10 +2,11 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UrlBuilder } from "@bytescale/sdk";
 import { UploadWidgetConfig } from "@bytescale/upload-widget";
 import { UploadDropzone } from "@bytescale/upload-widget-react";
+import { useImageHistory } from "../../hooks/useImageHistory";
 import { CompareSlider } from "../../components/CompareSlider";
 import Footer from "../../components/Footer";
 import Header from "../../components/Header";
@@ -77,6 +78,18 @@ export default function DreamPage() {
   const [editMode, setEditMode] = useState<boolean>(false);
   const [inpaintPrompt, setInpaintPrompt] = useState<string>("");
   const [generating, setGenerating] = useState<boolean>(false);
+  
+  const {
+    history,
+    currentIndex,
+    canUndo,
+    canRedo,
+    addToHistory,
+    undo,
+    redo,
+    getCurrentImage,
+    resetHistory,
+  } = useImageHistory();
 
   const UploadDropZone = () => (
     <UploadDropzone
@@ -95,6 +108,11 @@ export default function DreamPage() {
           });
           setPhotoName(imageName);
           setOriginalPhoto(imageUrl);
+          // Add original photo to history
+          addToHistory({
+            url: imageUrl,
+            type: 'original'
+          });
           generatePhoto(imageUrl);
         }
       }}
@@ -121,7 +139,14 @@ export default function DreamPage() {
     if (res.status !== 200) {
       setError(newPhoto);
     } else {
-      setRestoredImage(typeof newPhoto === 'string' ? newPhoto : newPhoto[0]);
+      const imageUrl = typeof newPhoto === 'string' ? newPhoto : newPhoto[0];
+      setRestoredImage(imageUrl);
+      // Add generated image to history
+      addToHistory({
+        url: imageUrl,
+        prompt: generatePromptFromSelections(kitchenSelections),
+        type: 'generated'
+      });
     }
     setTimeout(() => {
       setLoading(false);
@@ -151,7 +176,14 @@ export default function DreamPage() {
     if (res.status !== 200) {
       setError(newPhoto);
     } else {
-      setRestoredImage(typeof newPhoto === 'string' ? newPhoto : newPhoto[0]);
+      const imageUrl = typeof newPhoto === 'string' ? newPhoto : newPhoto[0];
+      setRestoredImage(imageUrl);
+      // Add inpainted image to history
+      addToHistory({
+        url: imageUrl,
+        prompt: inpaintPrompt,
+        type: 'inpainted'
+      });
     }
     setInpainting(false);
     setEditMode(false);
@@ -179,10 +211,55 @@ export default function DreamPage() {
     if (res.status !== 200) {
       setError(newPhoto);
     } else {
-      setRestoredImage(typeof newPhoto === 'string' ? newPhoto : newPhoto[0]);
+      const imageUrl = typeof newPhoto === 'string' ? newPhoto : newPhoto[0];
+      setRestoredImage(imageUrl);
+      // Add variation to history
+      addToHistory({
+        url: imageUrl,
+        prompt: generatePromptFromSelections(kitchenSelections),
+        type: 'variation'
+      });
     }
     setGenerating(false);
   }
+
+  // Handle undo action
+  const handleUndo = () => {
+    const previousImage = undo();
+    if (previousImage) {
+      setRestoredImage(previousImage.url);
+      // Reset edit mode when undoing
+      setEditMode(false);
+      setError(null);
+    }
+  };
+
+  // Handle redo action
+  const handleRedo = () => {
+    const nextImage = redo();
+    if (nextImage) {
+      setRestoredImage(nextImage.url);
+      // Reset edit mode when redoing
+      setEditMode(false);
+      setError(null);
+    }
+  };
+
+  // Add keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'z' && !e.shiftKey && canUndo) {
+        e.preventDefault();
+        handleUndo();
+      } else if ((e.metaKey || e.ctrlKey) && (e.key === 'y' || (e.key === 'z' && e.shiftKey)) && canRedo) {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [canUndo, canRedo]);
 
   return (
     <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
@@ -392,6 +469,7 @@ export default function DreamPage() {
                       setRestoredLoaded(false);
                       setError(null);
                       setEditMode(false);
+                      resetHistory();
                     }}
                     className="bg-blue-500 rounded-full text-white font-medium px-4 py-2 mt-8 hover:bg-blue-500/80 transition"
                   >
@@ -400,6 +478,31 @@ export default function DreamPage() {
                 )}
                 {restoredLoaded && (
                   <>
+                    {/* Undo/Redo buttons */}
+                    <button
+                      onClick={handleUndo}
+                      disabled={!canUndo}
+                      className={`rounded-full font-medium px-4 py-2 mt-8 transition ${
+                        canUndo 
+                          ? "bg-gray-600 text-white hover:bg-gray-700" 
+                          : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                      }`}
+                      title="Undo (Ctrl/Cmd + Z)"
+                    >
+                      ← Undo
+                    </button>
+                    <button
+                      onClick={handleRedo}
+                      disabled={!canRedo}
+                      className={`rounded-full font-medium px-4 py-2 mt-8 transition ${
+                        canRedo 
+                          ? "bg-gray-600 text-white hover:bg-gray-700" 
+                          : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                      }`}
+                      title="Redo (Ctrl/Cmd + Y)"
+                    >
+                      Redo →
+                    </button>
                     <button
                       onClick={() => {
                         downloadPhoto(

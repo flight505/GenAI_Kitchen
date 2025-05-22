@@ -14,26 +14,26 @@ const ratelimit = redis
 
 export async function POST(request: Request) {
   try {
-    // Rate Limiter Code
-    if (ratelimit) {
-      const headersList = headers();
-      const ipIdentifier = headersList.get("x-real-ip");
+    // Rate Limiter Code - TEMPORARILY DISABLED FOR TESTING
+    // if (ratelimit) {
+    //   const headersList = headers();
+    //   const ipIdentifier = headersList.get("x-real-ip");
 
-      const result = await ratelimit.limit(ipIdentifier ?? "");
+    //   const result = await ratelimit.limit(ipIdentifier ?? "");
 
-      if (!result.success) {
-        return new Response(
-          "Too many uploads in 1 day. Please try again in a 24 hours.",
-          {
-            status: 429,
-            headers: {
-              "X-RateLimit-Limit": result.limit,
-              "X-RateLimit-Remaining": result.remaining,
-            } as any,
-          }
-        );
-      }
-    }
+    //   if (!result.success) {
+    //     return new Response(
+    //       "Too many uploads in 1 day. Please try again in a 24 hours.",
+    //       {
+    //         status: 429,
+    //         headers: {
+    //           "X-RateLimit-Limit": result.limit,
+    //           "X-RateLimit-Remaining": result.remaining,
+    //         } as any,
+    //       }
+    //     );
+    //   }
+    // }
 
     const { imageUrl, maskImage, prompt } = await request.json();
 

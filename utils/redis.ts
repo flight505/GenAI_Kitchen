@@ -18,12 +18,21 @@ const hasValidRedisCredentials =
   !!process.env.UPSTASH_REDIS_REST_URL && 
   !!process.env.UPSTASH_REDIS_REST_TOKEN;
 
-// Only create Redis instance if we have valid credentials
-const redis = hasValidRedisCredentials
-  ? new Redis({
+let redis: Redis | undefined;
+
+try {
+  // Only create Redis instance if we have valid credentials
+  if (hasValidRedisCredentials) {
+    redis = new Redis({
       url: sanitizeUrl(process.env.UPSTASH_REDIS_REST_URL),
       token: sanitizeToken(process.env.UPSTASH_REDIS_REST_TOKEN),
-    })
-  : undefined;
+    });
+  } else {
+    console.log('Redis credentials not found, rate limiting will be disabled');
+  }
+} catch (error) {
+  console.error('Failed to initialize Redis client:', error);
+  // Redis will remain undefined, app will function without rate limiting
+}
 
 export default redis;

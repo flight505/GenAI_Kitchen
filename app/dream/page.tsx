@@ -14,8 +14,23 @@ import ResizablePanel from "../../components/ResizablePanel";
 import Toggle from "../../components/Toggle";
 import appendNewToName from "../../utils/appendNewToName";
 import downloadPhoto from "../../utils/downloadPhoto";
-import DropDown from "../../components/DropDown";
-import { roomType, rooms, themeType, themes } from "../../utils/dropdownTypes";
+import KitchenDropDown from "../../components/KitchenDropDown";
+import { 
+  KitchenDesignSelections,
+  CabinetStyle,
+  CabinetFinish,
+  CountertopMaterial,
+  FlooringType,
+  WallColor,
+  HardwareFinish,
+  cabinetStyles,
+  cabinetFinishes,
+  countertopMaterials,
+  flooringTypes,
+  wallColors,
+  hardwareFinishes,
+  generatePromptFromSelections
+} from "../../utils/kitchenTypes";
 import MaskDrawingCanvas from "../../components/MaskDrawingCanvas";
 
 const options: UploadWidgetConfig = {
@@ -50,8 +65,14 @@ export default function DreamPage() {
   const [sideBySide, setSideBySide] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [photoName, setPhotoName] = useState<string | null>(null);
-  const [theme, setTheme] = useState<themeType>("Modern");
-  const [room] = useState<roomType>("Kitchen");
+  const [kitchenSelections, setKitchenSelections] = useState<KitchenDesignSelections>({
+    cabinetStyle: "Modern Flat-Panel",
+    cabinetFinish: "Matte White",
+    countertop: "White Marble",
+    flooring: "Hardwood Oak",
+    wallColor: "Bright White",
+    hardware: "Brushed Steel"
+  });
   const [inpainting, setInpainting] = useState<boolean>(false);
   const [editMode, setEditMode] = useState<boolean>(false);
   const [inpaintPrompt, setInpaintPrompt] = useState<string>("");
@@ -92,8 +113,7 @@ export default function DreamPage() {
       },
       body: JSON.stringify({ 
         imageUrl: fileUrl, 
-        theme, 
-        room 
+        prompt: generatePromptFromSelections(kitchenSelections)
       }),
     });
 
@@ -151,7 +171,7 @@ export default function DreamPage() {
       },
       body: JSON.stringify({
         imageUrl: restoredImage,
-        prompt: `a ${theme.toLowerCase()} kitchen`,
+        prompt: generatePromptFromSelections(kitchenSelections),
       }),
     });
 
@@ -176,7 +196,7 @@ export default function DreamPage() {
             <motion.div className="flex justify-between items-center w-full flex-col mt-4">
               {!restoredImage && (
                 <>
-                  <div className="space-y-4 w-full max-w-sm">
+                  <div className="space-y-4 w-full max-w-2xl">
                     <div className="flex mt-3 items-center space-x-3">
                       <Image
                         src="/number-1-white.svg"
@@ -185,18 +205,49 @@ export default function DreamPage() {
                         alt="1 icon"
                       />
                       <p className="text-left font-medium">
-                        Choose your kitchen style.
+                        Design your kitchen.
                       </p>
                     </div>
-                    <DropDown
-                      theme={theme}
-                      setTheme={(newTheme) =>
-                        setTheme(newTheme as typeof theme)
-                      }
-                      themes={themes}
-                    />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <KitchenDropDown
+                        value={kitchenSelections.cabinetStyle}
+                        setValue={(value) => setKitchenSelections({...kitchenSelections, cabinetStyle: value})}
+                        options={cabinetStyles}
+                        label="Cabinet Style"
+                      />
+                      <KitchenDropDown
+                        value={kitchenSelections.cabinetFinish}
+                        setValue={(value) => setKitchenSelections({...kitchenSelections, cabinetFinish: value})}
+                        options={cabinetFinishes}
+                        label="Cabinet Finish"
+                      />
+                      <KitchenDropDown
+                        value={kitchenSelections.countertop}
+                        setValue={(value) => setKitchenSelections({...kitchenSelections, countertop: value})}
+                        options={countertopMaterials}
+                        label="Countertop Material"
+                      />
+                      <KitchenDropDown
+                        value={kitchenSelections.flooring}
+                        setValue={(value) => setKitchenSelections({...kitchenSelections, flooring: value})}
+                        options={flooringTypes}
+                        label="Flooring Type"
+                      />
+                      <KitchenDropDown
+                        value={kitchenSelections.wallColor}
+                        setValue={(value) => setKitchenSelections({...kitchenSelections, wallColor: value})}
+                        options={wallColors}
+                        label="Wall Color"
+                      />
+                      <KitchenDropDown
+                        value={kitchenSelections.hardware}
+                        setValue={(value) => setKitchenSelections({...kitchenSelections, hardware: value})}
+                        options={hardwareFinishes}
+                        label="Hardware Finish"
+                      />
+                    </div>
                   </div>
-                  <div className="mt-4 w-full max-w-sm">
+                  <div className="mt-4 w-full max-w-2xl">
                     <div className="flex mt-6 w-96 items-center space-x-3">
                       <Image
                         src="/number-2-white.svg"
@@ -213,8 +264,7 @@ export default function DreamPage() {
               )}
               {restoredImage && (
                 <div>
-                  Here's your remodeled <b>kitchen</b> in the{" "}
-                  <b>{theme.toLowerCase()}</b> style!{" "}
+                  Here's your custom-designed <b>kitchen</b> based on your selections!
                 </div>
               )}
               <div

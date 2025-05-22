@@ -35,10 +35,14 @@ export async function POST(request: Request) {
       }
     }
 
-    const { imageUrl, theme, room } = await request.json();
+    const { imageUrl, prompt } = await request.json();
 
     if (!imageUrl) {
       return new Response("Missing required parameter: imageUrl", { status: 400 });
+    }
+
+    if (!prompt) {
+      return new Response("Missing required parameter: prompt", { status: 400 });
     }
 
     // POST request to Replicate to start the image restoration generation process
@@ -54,7 +58,7 @@ export async function POST(request: Request) {
         version: "b490e8c7b82f557c9e4b55b00060a93aba54f8c95642dd19d308b67184b86189",
         input: {
           image: imageUrl,
-          prompt: `a ${theme.toLowerCase()} kitchen`,
+          prompt: prompt,
           steps: 30,
           guidance: 8.0,
           safety_tolerance: 5

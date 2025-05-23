@@ -1,17 +1,17 @@
-import { Ratelimit } from "@upstash/ratelimit";
-import redis from "../../utils/redis";
+// import { Ratelimit } from "@upstash/ratelimit";
+// import redis from "../../utils/redis";
 import { NextResponse } from "next/server";
-import { headers } from "next/headers";
+// import { headers } from "next/headers";
 import { createStyleConsistentVariation } from "../../utils/promptTemplating";
 
 // Create a new ratelimiter, that allows 5 requests per 24 hours
-const ratelimit = redis
-  ? new Ratelimit({
-      redis: redis,
-      limiter: Ratelimit.fixedWindow(5, "1440 m"),
-      analytics: true,
-    })
-  : undefined;
+// const ratelimit = redis
+//   ? new Ratelimit({
+//       redis: redis,
+//       limiter: Ratelimit.fixedWindow(5, "1440 m"),
+//       analytics: true,
+//     })
+//   : undefined;
 
 export async function POST(request: Request) {
   try {

@@ -169,7 +169,6 @@ export default function SocialShareMenu({ imageUrl, kitchenPrompt, onClose }: So
 
   // Share on Instagram (opens Instagram with image)
   const shareOnInstagram = () => {
-    const text = encodeURIComponent(getShareText('instagram'));
     // Instagram doesn't support direct URL sharing, so we'll copy text and show instructions
     navigator.clipboard.writeText(getShareText('instagram'));
     alert('Caption copied to clipboard! Now download the image and share it on Instagram.');

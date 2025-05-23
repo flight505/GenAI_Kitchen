@@ -1,4 +1,4 @@
-import { enhanceKitchenPrompt } from './promptTemplating';
+// import { enhanceKitchenPrompt } from './promptTemplating';
 
 export type CabinetStyle = 
   | "Modern Flat-Panel"
@@ -92,12 +92,16 @@ export interface KitchenDesignSelections {
 export function generatePromptFromSelections(selections: KitchenDesignSelections): string {
   const basePrompt = `a kitchen with ${selections.cabinetStyle.toLowerCase()} cabinets painted ${selections.cabinetFinish.toLowerCase()}, ${selections.countertop.toLowerCase()} countertops, ${selections.flooring.toLowerCase()} flooring, ${selections.wallColor.toLowerCase()} walls, and ${selections.hardware.toLowerCase()} hardware`;
   
-  return enhanceKitchenPrompt(basePrompt, {
-    cabinetStyle: selections.cabinetStyle,
-    cabinetFinish: selections.cabinetFinish,
-    countertop: selections.countertop,
-    flooring: selections.flooring,
-    wallColor: selections.wallColor,
-    hardware: selections.hardware
-  });
+  // Temporary: return base prompt without enhancement to fix webpack error
+  return basePrompt;
+  
+  // TODO: Re-enable prompt enhancement once import issue is resolved
+  // return enhanceKitchenPrompt(basePrompt, {
+  //   cabinetStyle: selections.cabinetStyle,
+  //   cabinetFinish: selections.cabinetFinish,
+  //   countertop: selections.countertop,
+  //   flooring: selections.flooring,
+  //   wallColor: selections.wallColor,
+  //   hardware: selections.hardware
+  // });
 }

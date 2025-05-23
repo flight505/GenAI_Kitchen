@@ -33,6 +33,7 @@ import {
 } from "../../utils/kitchenTypes";
 import ModernInpaintUI from "../../components/ModernInpaintUI";
 import SocialShareMenu from "../../components/SocialShareMenu";
+import { isAuthenticated, getCurrentUser } from "../../utils/auth";
 
 const options: UploadWidgetConfig = {
   apiKey: !!process.env.NEXT_PUBLIC_UPLOAD_API_KEY
@@ -59,6 +60,8 @@ const options: UploadWidgetConfig = {
 };
 
 export default function DreamPage() {
+  const [user, setUser] = useState<any>(null);
+  const [authChecked, setAuthChecked] = useState(false);
   const [originalPhoto, setOriginalPhoto] = useState<string | null>(null);
   const [restoredImage, setRestoredImage] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
@@ -196,6 +199,42 @@ export default function DreamPage() {
     setEditMode(false);
   }
 
+  async function saveDesign() {
+    if (!restoredImage || !user) return;
+    
+    setLoading(true);
+    try {
+      const currentImage = getCurrentImage();
+      const response = await fetch("/api/save", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${user.token}`
+        },
+        body: JSON.stringify({
+          imageUrl: restoredImage,
+          originalImageUrl: originalPhoto,
+          prompt: generatePromptFromSelections(kitchenSelections),
+          designSelections: kitchenSelections,
+          type: currentImage?.type || 'generated'
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        // Show success feedback
+        alert("Design saved successfully!");
+      } else {
+        setError(data.error || "Failed to save design");
+      }
+    } catch (error) {
+      setError("Failed to save design. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
   async function generateVariation() {
     if (!restoredImage) {
       setError("No image to generate variations from");
@@ -252,6 +291,17 @@ export default function DreamPage() {
     }
   }, [redo]);
 
+  // Check authentication on component mount
+  useEffect(() => {
+    const checkAuth = () => {
+      const currentUser = getCurrentUser();
+      setUser(currentUser);
+      setAuthChecked(true);
+    };
+    
+    checkAuth();
+  }, []);
+
   // Add keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -267,6 +317,22 @@ export default function DreamPage() {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [canUndo, canRedo, handleUndo, handleRedo]);
+
+  // Show loading while checking authentication
+  if (!authChecked) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="loading-dots mb-4">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <p className="text-neutral-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex max-w-6xl mx-auto flex-col items-center justify-center py-2 min-h-screen">
@@ -530,6 +596,16 @@ export default function DreamPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                       Download
+                    </button>
+                    <button
+                      onClick={saveDesign}
+                      disabled={loading || !user}
+                      className="btn-secondary btn-md mt-8 hover-lift disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                      </svg>
+                      Save Design
                     </button>
                     <button
                       onClick={() => setShowShareMenu(!showShareMenu)}

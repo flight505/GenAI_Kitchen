@@ -182,15 +182,15 @@ const MaskDrawingCanvas: React.FC<MaskDrawingCanvasProps> = ({
             max="50"
             value={brushSize}
             onChange={(e) => setBrushSize(parseInt(e.target.value))}
-            className="w-24"
+            className="w-24 accent-unoform-gold"
           />
           <span className="ml-1 text-sm">{brushSize}px</span>
         </div>
         
         <button
           onClick={() => setIsEraser(false)}
-          className={`px-3 py-1 text-sm rounded-md ${
-            !isEraser ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"
+          className={`px-3 py-1 text-sm ${
+            !isEraser ? "bg-unoform-gold text-white" : "bg-unoform-gray-light text-unoform-black"
           }`}
         >
           Brush
@@ -198,8 +198,8 @@ const MaskDrawingCanvas: React.FC<MaskDrawingCanvasProps> = ({
         
         <button
           onClick={() => setIsEraser(true)}
-          className={`px-3 py-1 text-sm rounded-md ${
-            isEraser ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-700"
+          className={`px-3 py-1 text-sm ${
+            isEraser ? "bg-unoform-gold text-white" : "bg-unoform-gray-light text-unoform-black"
           }`}
         >
           Eraser
@@ -207,20 +207,20 @@ const MaskDrawingCanvas: React.FC<MaskDrawingCanvasProps> = ({
         
         <button
           onClick={handleClearMask}
-          className="px-3 py-1 text-sm bg-gray-200 text-gray-700 rounded-md"
+          className="px-3 py-1 text-sm bg-unoform-gray-light text-unoform-black hover:bg-unoform-gray transition-colors"
         >
           Clear
         </button>
         
         <button
           onClick={handleApplyMask}
-          className="px-3 py-1 text-sm bg-green-500 text-white rounded-md"
+          className="px-3 py-1 text-sm bg-unoform-gold text-white hover:bg-unoform-gold-dark transition-colors"
         >
           Apply Inpaint
         </button>
       </div>
       
-      <div className="mt-2 text-sm text-gray-500">
+      <div className="mt-2 text-sm text-unoform-gray-dark">
         Paint over the areas you want to change
       </div>
     </div>

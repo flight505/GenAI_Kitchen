@@ -119,6 +119,40 @@ button, a, input, select, textarea {
   transition: all 0.2s ease;
 }
 
+/* Bytescale Upload Widget Overrides */
+.uploadcare--button, 
+.uploadcare--button_primary,
+.uw-button,
+.uw-button--primary {
+  background-color: #C19A5B !important;
+  border: 1.2px solid #C19A5B !important;
+  color: #FFFFFF !important;
+  font-family: 'Work Sans', sans-serif !important;
+  font-weight: 500 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 2.63px !important;
+  padding: 12px 30px 13px !important;
+  border-radius: 0 !important;
+  transition: opacity 0.1s ease !important;
+}
+
+.uploadcare--button:hover,
+.uploadcare--button_primary:hover,
+.uw-button:hover,
+.uw-button--primary:hover {
+  background-color: #AD8850 !important;
+  border-color: #AD8850 !important;
+  opacity: 0.9 !important;
+}
+
+/* Upload widget text styles */
+.uploadcare--widget__text,
+.uw-text,
+.uw-widget__text {
+  font-family: 'Work Sans', sans-serif !important;
+  color: #4C4C4C !important;
+}
+
 button:active:not(:disabled) {
   transform: translateY(1px);
 }

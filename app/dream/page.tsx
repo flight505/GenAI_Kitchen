@@ -44,17 +44,23 @@ const options: UploadWidgetConfig = {
   editor: { images: { crop: false } },
   styles: {
     colors: {
-      primary: "#2563EB", // Primary buttons & links
-      error: "#d23f4d", // Error messages
-      shade100: "#fff", // Standard text
-      shade200: "#fffe", // Secondary button text
-      shade300: "#fffd", // Secondary button text (hover)
-      shade400: "#fffc", // Welcome text
-      shade500: "#fff9", // Modal close button
-      shade600: "#fff7", // Border
-      shade700: "#fff2", // Progress indicator background
-      shade800: "#fff1", // File item background
-      shade900: "#ffff", // Various (draggable crop buttons, etc.)
+      primary: "#C19A5B", // Unoform gold - Primary buttons & links
+      error: "#D8594C", // Unoform red - Error messages
+      shade100: "#000000", // Unoform black - Standard text
+      shade200: "#FFFFFF", // White - Secondary button text
+      shade300: "#FFFFFF", // White - Secondary button text (hover)
+      shade400: "#4C4C4C", // Unoform gray-dark - Welcome text
+      shade500: "#999999", // Unoform gray - Modal close button
+      shade600: "#4C4C4C", // Unoform gray-dark - Border
+      shade700: "#F2F2E5", // Unoform cream - Progress indicator background
+      shade800: "#F2F2E5", // Unoform cream - File item background
+      shade900: "#CCCCCC", // Unoform gray-light - Various (draggable crop buttons, etc.)
+    },
+    fontFamilies: {
+      base: "Work Sans, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    },
+    fontSizes: {
+      base: 14,
     },
   },
 };

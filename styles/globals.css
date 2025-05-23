@@ -1,5 +1,5 @@
 @import './modern-design-system.css';
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@200;300;400;500&display=swap');
 
 /* These are valid Tailwind directives */
 /* stylelint-disable at-rule-no-unknown */
@@ -31,11 +31,87 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-family: 'Work Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  font-weight: 400;
+  color: #000000;
+  background-color: #FFFFFF;
 }
 
 /* Image optimization */
 img {
   image-rendering: -webkit-optimize-contrast;
+}
+
+/* SVG icon default colors */
+svg {
+  color: #4C4C4C; /* unoform-gray-dark */
+}
+
+/* Override for specific contexts */
+.text-white svg {
+  color: #FFFFFF;
+}
+
+.text-unoform-gold svg {
+  color: #C19A5B;
+}
+
+/* Unoform Button Styles */
+.btn-unoform-primary {
+  align-items: center;
+  background-color: #C19A5B;
+  border: 1.2px solid #C19A5B;
+  border-radius: 0;
+  box-shadow: none;
+  color: #fff;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 500;
+  justify-content: center;
+  letter-spacing: 2.63px;
+  line-height: 22px;
+  outline: 0;
+  padding: 12px 30px 13px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: opacity .1s ease;
+  z-index: 0;
+  cursor: pointer;
+}
+
+.btn-unoform-primary:hover {
+  opacity: 0.8;
+}
+
+.btn-unoform-secondary {
+  align-items: center;
+  background-color: transparent;
+  border: 1.2px solid #000000;
+  border-radius: 0;
+  box-shadow: none;
+  color: #000000;
+  display: inline-flex;
+  font-size: 14px;
+  font-weight: 500;
+  justify-content: center;
+  letter-spacing: 2.63px;
+  line-height: 22px;
+  outline: 0;
+  padding: 12px 30px 13px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: all .1s ease;
+  z-index: 0;
+  cursor: pointer;
+}
+
+.btn-unoform-secondary:hover {
+  background-color: #000000;
+  color: #FFFFFF;
 }
 
 /* Button and interactive element animations */

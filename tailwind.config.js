@@ -12,37 +12,47 @@ module.exports = {
       },
       colors: {
         'unoform': {
-          // Primary - Whites and grays
-          'white': '#FAFAFA',
-          'gray-50': '#F5F5F5',
-          'gray-100': '#EEEEEE',
-          'gray-200': '#E0E0E0',
-          // Secondary - Wood tones
-          'beige-50': '#F5F0E8',
-          'beige-100': '#E8DCC6',
-          'beige-200': '#D4C4B0',
-          'beige-300': '#C0AC9A',
-          // Accent - Blacks
-          'black': '#1A1A1A',
-          'charcoal': '#2C2C2C',
-          'gray-dark': '#404040',
-          'gray-medium': '#525252',
-          // Interactive
-          'sage': '#A8B5A0',
-          'sage-dark': '#93A08B',
-          'sage-darker': '#7E8B76',
-          'blue': '#9FAEC0',
-          'blue-dark': '#8A9AAD',
-          'blue-darker': '#75869A',
+          // Official Unoform Brand Colors
+          'cream': '#F2F2E5',
+          'black': '#000000',
+          'gray': '#999999',
+          'gray-dark': '#4C4C4C',
+          'gray-medium': '#72727F',
+          'gold': '#C19A5B',
+          'gold-dark': '#AD8850',
+          'dark-brown': '#262619',
+          'gray-light': '#CCCCCC',
+          'red': '#D8594C',
+          // Legacy mappings for compatibility
+          'white': '#FFFFFF',
+          'beige-50': '#F2F2E5',
+          'beige-100': '#F2F2E5',
+          'beige-200': '#F2F2E5',
+          'sage': '#CCA572',
+          'sage-dark': '#B8956A',
+          'sage-darker': '#A17E5A',
+          'charcoal': '#262619',
+          'gray-50': '#F2F2E5',
+          'gray-100': '#CCCCCC',
+          'gray-200': '#999999',
         }
       },
       fontFamily: {
-        'sans': ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Helvetica Neue', 'sans-serif'],
+        'sans': ['Work Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Helvetica Neue', 'sans-serif'],
+      },
+      fontWeight: {
+        'extralight': '200',
+        'light': '300',
+        'normal': '400',
+        'medium': '500',
       },
       fontSize: {
-        'display': ['3rem', { lineHeight: '1.2', letterSpacing: '-0.025em' }],
-        'h1': ['2.25rem', { lineHeight: '1.3', letterSpacing: '-0.02em' }],
-        'h2': ['1.875rem', { lineHeight: '1.4', letterSpacing: '-0.015em' }],
+        'display-lg': ['82px', { lineHeight: '86px', letterSpacing: '-1.5px', fontWeight: '200' }],
+        'display': ['42px', { lineHeight: '48px', letterSpacing: '-1.5px', fontWeight: '200' }],
+        'display-mobile': ['30px', { lineHeight: '36px', letterSpacing: '-1.5px', fontWeight: '200' }],
+        'h1': ['46px', { lineHeight: '56px', letterSpacing: '-0.6px', fontWeight: '300' }],
+        'h1-mobile': ['30px', { lineHeight: '36px', letterSpacing: '-0.6px', fontWeight: '300' }],
+        'body': ['14px', { lineHeight: '20px', letterSpacing: '0px', fontWeight: '400' }],
       },
       spacing: {
         '18': '4.5rem',

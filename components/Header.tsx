@@ -12,13 +12,10 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="flex flex-col xs:flex-row justify-between items-center w-full mt-3 border-b pb-7 sm:px-4 px-2 border-unoform-gray-200 gap-2">
+    <header className="flex flex-col xs:flex-row justify-between items-center w-full mt-3 border-b pb-7 sm:px-4 px-2 border-unoform-gray-dark gap-2">
       <Link href="/" className="flex items-center space-x-3">
-        <div className="w-10 h-10 bg-unoform-sage rounded-lg flex items-center justify-center">
-          <span className="text-white font-semibold text-lg">U</span>
-        </div>
-        <h1 className="sm:text-2xl text-xl font-semibold tracking-tight text-unoform-black">
-          Unoform Kitchen Designer
+        <h1 className="text-2xl font-light tracking-wider text-unoform-black uppercase">
+          Unoform
         </h1>
       </Link>
       <nav className="flex items-center space-x-4">
@@ -26,7 +23,7 @@ export default function Header() {
           href="https://unoform.dk"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-unoform-gray-medium hover:text-unoform-black transition-colors duration-200 text-sm font-medium"
+          className="text-body text-unoform-gray-medium hover:text-unoform-black transition-colors duration-200 font-normal"
         >
           Visit Unoform.dk
         </a>
@@ -35,23 +32,23 @@ export default function Header() {
           <>
             <Link
               href="/saved"
-              className="text-unoform-gray-medium hover:text-unoform-black transition-colors duration-200 text-sm font-medium"
+              className="text-body text-unoform-gray-medium hover:text-unoform-black transition-colors duration-200 font-normal"
             >
               My Designs
             </Link>
             <Link
               href="/dream"
-              className="bg-unoform-sage text-white px-4 py-2 rounded-lg font-medium hover:bg-unoform-sage-dark transition-all duration-200 shadow-subtle hover:shadow-soft text-sm"
+              className="bg-unoform-gold text-white px-6 py-2 font-normal hover:bg-unoform-gold-dark transition-all duration-200 text-body uppercase tracking-wider"
             >
               Create Design
             </Link>
             <div className="flex items-center space-x-3">
-              <span className="text-sm text-unoform-gray-medium">
+              <span className="text-body text-unoform-gray-medium">
                 {user.username}
               </span>
               <button
                 onClick={() => logout()}
-                className="text-unoform-gray-medium hover:text-unoform-black transition-colors duration-200 text-sm font-medium"
+                className="text-body text-unoform-gray-medium hover:text-unoform-black transition-colors duration-200 font-normal"
               >
                 Logout
               </button>
@@ -60,7 +57,7 @@ export default function Header() {
         ) : (
           <Link
             href="/login"
-            className="bg-unoform-sage text-white px-6 py-2.5 rounded-lg font-medium hover:bg-unoform-sage-dark transition-all duration-200 shadow-subtle hover:shadow-soft text-sm"
+            className="border border-unoform-black text-unoform-black px-6 py-2 font-normal hover:bg-unoform-black hover:text-white transition-all duration-200 text-body uppercase tracking-wider"
           >
             Employee Login
           </Link>

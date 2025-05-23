@@ -42,18 +42,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100">
+    <div className="min-h-screen bg-white">
       <Header />
       
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-md mx-auto">
-          <div className="card bg-white border border-neutral-200 shadow-soft">
+          <div className="bg-white border border-unoform-gray-dark">
             <div className="p-8">
               <div className="text-center mb-8">
-                <h1 className="text-2xl font-semibold text-neutral-900 mb-2">
+                <h1 className="text-2xl font-light text-unoform-black mb-2">
                   Unoform Employee Access
                 </h1>
-                <p className="text-neutral-600">
+                <p className="text-unoform-gray-dark">
                   Please log in to access the Kitchen Design Tool
                 </p>
               </div>
@@ -67,7 +67,7 @@ export default function LoginPage() {
                     id="username"
                     type="text"
                     required
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-unoform-gray-dark focus:outline-none focus:ring-2 focus:ring-unoform-gold focus:border-transparent"
                     value={credentials.username}
                     onChange={(e) => setCredentials(prev => ({ ...prev, username: e.target.value }))}
                     placeholder="Enter your username"
@@ -82,7 +82,7 @@ export default function LoginPage() {
                     id="password"
                     type="password"
                     required
-                    className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-unoform-gray-dark focus:outline-none focus:ring-2 focus:ring-unoform-gold focus:border-transparent"
                     value={credentials.password}
                     onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
                     placeholder="Enter your password"

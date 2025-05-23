@@ -88,7 +88,7 @@ export default function SavedDesignsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100">
+      <div className="min-h-screen bg-white">
         <Header />
         <div className="flex items-center justify-center py-20">
           <div className="text-center">
@@ -106,7 +106,7 @@ export default function SavedDesignsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100">
+    <div className="min-h-screen bg-white">
       <Header />
       
       <div className="container mx-auto px-4 py-12">

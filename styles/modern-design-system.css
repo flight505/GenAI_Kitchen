@@ -1,39 +1,50 @@
 /* Modern Design System for GenAI Kitchen - Inspired by shadcn/ui */
 
 :root {
-  /* Border Radius */
-  --radius: 0.5rem;
+  /* Border Radius - Minimal for Unoform style */
+  --radius: 0.25rem;
   
-  /* Light Mode Colors using OKLCH for better color consistency */
-  --background: oklch(0.99 0 0);
-  --foreground: oklch(0.15 0.01 285);
+  /* Official Unoform Colors */
+  --unoform-cream: #F2F2E5;
+  --unoform-black: #000000;
+  --unoform-gray: #999999;
+  --unoform-gray-dark: #4C4C4C;
+  --unoform-gray-medium: #72727F;
+  --unoform-gold: #CCA572;
+  --unoform-dark-brown: #262619;
+  --unoform-gray-light: #CCCCCC;
+  --unoform-red: #D8594C;
   
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.15 0.01 285);
+  /* Light Mode Colors mapped to Unoform palette */
+  --background: #FFFFFF; /* Cream white */
+  --foreground: #000000; /* Unoform black */
   
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.15 0.01 285);
+  --card: #FFFFFF;
+  --card-foreground: #000000;
   
-  /* Unoform Sage Green Primary */
-  --primary: oklch(0.65 0.08 145);
-  --primary-foreground: oklch(0.99 0 0);
+  --popover: #FFFFFF;
+  --popover-foreground: #000000;
   
-  /* Soft Beige Secondary */
-  --secondary: oklch(0.92 0.02 85);
-  --secondary-foreground: oklch(0.15 0.01 285);
+  /* Unoform Gold Primary */
+  --primary: #C19A5B;
+  --primary-foreground: #FFFFFF;
   
-  --muted: oklch(0.96 0.005 285);
-  --muted-foreground: oklch(0.55 0.01 285);
+  /* Light Gray Secondary */
+  --secondary: #CCCCCC;
+  --secondary-foreground: #000000;
   
-  --accent: oklch(0.93 0.02 95);
-  --accent-foreground: oklch(0.15 0.01 285);
+  --muted: #F2F2E5;
+  --muted-foreground: #4C4C4C;
   
-  --destructive: oklch(0.58 0.19 27);
-  --destructive-foreground: oklch(0.99 0 0);
+  --accent: #CCA572;
+  --accent-foreground: #FFFFFF;
   
-  --border: oklch(0.92 0.004 286);
-  --input: oklch(0.92 0.004 286);
-  --ring: oklch(0.65 0.08 145);
+  --destructive: #D8594C;
+  --destructive-foreground: #FFFFFF;
+  
+  --border: #4C4C4C;
+  --input: #4C4C4C;
+  --ring: #CCA572;
   
   /* Chart Colors */
   --chart-1: oklch(0.65 0.15 41);
@@ -83,20 +94,26 @@ body {
   background-color: var(--background);
 }
 
-/* Modern Button Styles */
+/* Modern Button Styles - Unoform Style */
 .btn-modern {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
-  border-radius: var(--radius);
-  font-size: 0.875rem;
+  border-radius: 0;
+  font-size: 14px;
   font-weight: 500;
-  transition: all 0.2s ease;
-  outline: none;
-  border: none;
+  transition: opacity 0.1s ease;
+  outline: 0;
+  border: 1.2px solid;
   cursor: pointer;
   text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 2.63px;
+  line-height: 22px;
+  padding: 12px 30px 13px;
+  position: relative;
+  text-align: center;
 }
 
 .btn-modern:focus-visible {
@@ -109,37 +126,36 @@ body {
   opacity: 0.5;
 }
 
-.btn-default {
-  background-color: var(--primary);
-  color: var(--primary-foreground);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+.btn-default, .btn-primary {
+  background-color: #C19A5B;
+  color: #FFFFFF;
+  border-color: #C19A5B;
 }
 
-.btn-default:hover:not(:disabled) {
-  background-color: oklch(0.60 0.08 145);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
+.btn-default:hover:not(:disabled), .btn-primary:hover:not(:disabled) {
+  opacity: 0.8;
 }
 
 .btn-secondary {
-  background-color: var(--secondary);
-  color: var(--secondary-foreground);
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  background-color: transparent;
+  color: #000000;
+  border-color: #000000;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background-color: oklch(0.88 0.02 85);
+  background-color: #000000;
+  color: #FFFFFF;
 }
 
 .btn-outline {
-  border: 1px solid var(--input);
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: transparent;
+  color: #C19A5B;
+  border-color: #C19A5B;
 }
 
 .btn-outline:hover:not(:disabled) {
-  background-color: var(--accent);
-  color: var(--accent-foreground);
+  background-color: #C19A5B;
+  color: #FFFFFF;
 }
 
 .btn-ghost {
@@ -176,19 +192,21 @@ body {
 
 /* Button Sizes */
 .btn-sm {
-  height: 2rem;
-  padding: 0 0.75rem;
-  font-size: 0.75rem;
+  padding: 8px 20px 9px;
+  font-size: 12px;
+  letter-spacing: 2.2px;
 }
 
 .btn-md {
-  height: 2.5rem;
-  padding: 0.5rem 1rem;
+  padding: 12px 30px 13px;
+  font-size: 14px;
+  letter-spacing: 2.63px;
 }
 
 .btn-lg {
-  height: 2.75rem;
-  padding: 0.5rem 2rem;
+  padding: 14px 40px 15px;
+  font-size: 14px;
+  letter-spacing: 2.63px;
 }
 
 .btn-icon {

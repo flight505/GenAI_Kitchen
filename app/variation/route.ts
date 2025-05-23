@@ -3,6 +3,8 @@
 import { NextResponse } from "next/server";
 // import { headers } from "next/headers";
 import { createStyleConsistentVariation } from "../../utils/promptTemplating";
+import { APIMonitor } from "../../utils/monitoring";
+import { verifyToken } from "../../utils/server-auth";
 
 // Create a new ratelimiter, that allows 5 requests per 24 hours
 // const ratelimit = redis
@@ -14,7 +16,21 @@ import { createStyleConsistentVariation } from "../../utils/promptTemplating";
 //   : undefined;
 
 export async function POST(request: Request) {
+  const monitor = APIMonitor.getInstance();
+  let userId: string | undefined;
+  
   try {
+    // Try to get user ID from auth token if present
+    const authHeader = request.headers.get("authorization");
+    if (authHeader) {
+      try {
+        const token = authHeader.replace("Bearer ", "");
+        const payload = await verifyToken(token);
+        userId = payload.username;
+      } catch {
+        // Continue without user ID if token is invalid
+      }
+    }
     // Rate Limiter Code - TEMPORARILY DISABLED FOR TESTING
     // if (ratelimit) {
     //   const headersList = headers();
@@ -124,12 +140,41 @@ export async function POST(request: Request) {
     }
 
     if (!variationImage) {
+      // Track timeout
+      await monitor.trackUsage({
+        endpoint: 'variation',
+        userId,
+        timestamp: Date.now(),
+        success: false,
+        error: 'Timeout after 30 seconds',
+        modelVersion: '3b71c725e2fa07c1ba4e50c61022a06d3a3cf67b87c2c27dd3f8b30d50e8f0ba'
+      });
       return new Response("Timeout: Variation generation took too long", { status: 504 });
     }
+
+    // Track successful variation
+    await monitor.trackUsage({
+      endpoint: 'variation',
+      userId,
+      timestamp: Date.now(),
+      success: true,
+      cost: monitor.estimateCost('flux-redux-dev'),
+      modelVersion: '3b71c725e2fa07c1ba4e50c61022a06d3a3cf67b87c2c27dd3f8b30d50e8f0ba'
+    });
 
     return NextResponse.json(variationImage);
   } catch (error) {
     console.error("Unexpected error:", error);
+    
+    // Track error
+    await monitor.trackUsage({
+      endpoint: 'variation',
+      userId,
+      timestamp: Date.now(),
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+    
     return new Response(`Server error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
       status: 500
     });

@@ -3,6 +3,8 @@
 import { NextResponse } from "next/server";
 // import { headers } from "next/headers";
 import { enhancePromptWithUnoformStyle } from "../../utils/promptTemplating";
+import { APIMonitor } from "../../utils/monitoring";
+import { verifyToken } from "../../utils/server-auth";
 
 // Create a new ratelimiter, that allows 5 requests per 24 hours
 // const ratelimit = redis
@@ -14,7 +16,21 @@ import { enhancePromptWithUnoformStyle } from "../../utils/promptTemplating";
 //   : undefined;
 
 export async function POST(request: Request) {
+  const monitor = APIMonitor.getInstance();
+  let userId: string | undefined;
+  
   try {
+    // Try to get user ID from auth token if present
+    const authHeader = request.headers.get("authorization");
+    if (authHeader) {
+      try {
+        const token = authHeader.replace("Bearer ", "");
+        const payload = await verifyToken(token);
+        userId = payload.username;
+      } catch {
+        // Continue without user ID if token is invalid
+      }
+    }
     // Rate Limiter Code - TEMPORARILY DISABLED FOR TESTING
     // if (ratelimit) {
     //   const headersList = headers();
@@ -121,12 +137,41 @@ export async function POST(request: Request) {
     }
 
     if (!inpaintedImage) {
+      // Track timeout
+      await monitor.trackUsage({
+        endpoint: 'inpaint',
+        userId,
+        timestamp: Date.now(),
+        success: false,
+        error: 'Timeout after 30 seconds',
+        modelVersion: '10b45d01bb46cffc8d7893b36d720e369d732bb2e48ca3db469a18929eff359d'
+      });
       return new Response("Timeout: Inpainting took too long", { status: 504 });
     }
+
+    // Track successful inpainting
+    await monitor.trackUsage({
+      endpoint: 'inpaint',
+      userId,
+      timestamp: Date.now(),
+      success: true,
+      cost: monitor.estimateCost('flux-fill-pro'),
+      modelVersion: '10b45d01bb46cffc8d7893b36d720e369d732bb2e48ca3db469a18929eff359d'
+    });
 
     return NextResponse.json(inpaintedImage);
   } catch (error) {
     console.error("Unexpected error:", error);
+    
+    // Track error
+    await monitor.trackUsage({
+      endpoint: 'inpaint',
+      userId,
+      timestamp: Date.now(),
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+    
     return new Response(`Server error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
       status: 500
     });

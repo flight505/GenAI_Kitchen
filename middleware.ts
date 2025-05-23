@@ -7,7 +7,7 @@ const JWT_SECRET = new TextEncoder().encode(
 );
 
 // Routes that require authentication
-const PROTECTED_ROUTES = ["/dream", "/saved"];
+const PROTECTED_ROUTES = ["/dream", "/saved", "/admin"];
 
 // Routes that should redirect authenticated users
 const AUTH_ROUTES = ["/login"];

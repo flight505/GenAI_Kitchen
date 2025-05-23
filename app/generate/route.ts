@@ -3,6 +3,8 @@
 import { NextResponse } from "next/server";
 // import { headers } from "next/headers";
 import { enhancePromptWithUnoformStyle } from "../../utils/promptTemplating";
+import { APIMonitor } from "../../utils/monitoring";
+import { verifyToken } from "../../utils/server-auth";
 
 // Create a new ratelimiter, that allows 5 requests per 24 hours
 // const ratelimit = redis
@@ -14,7 +16,22 @@ import { enhancePromptWithUnoformStyle } from "../../utils/promptTemplating";
 //   : undefined;
 
 export async function POST(request: Request) {
+  const monitor = APIMonitor.getInstance();
+  const startTime = Date.now();
+  let userId: string | undefined;
+  
   try {
+    // Try to get user ID from auth token if present
+    const authHeader = request.headers.get("authorization");
+    if (authHeader) {
+      try {
+        const token = authHeader.replace("Bearer ", "");
+        const payload = await verifyToken(token);
+        userId = payload.username;
+      } catch {
+        // Continue without user ID if token is invalid
+      }
+    }
     // Rate Limiter Code - TEMPORARILY DISABLED FOR TESTING
     // if (ratelimit) {
     //   const headersList = headers();
@@ -130,12 +147,41 @@ export async function POST(request: Request) {
     }
 
     if (!restoredImage) {
+      // Track timeout
+      await monitor.trackUsage({
+        endpoint: 'generate',
+        userId,
+        timestamp: Date.now(),
+        success: false,
+        error: 'Timeout after 30 seconds',
+        modelVersion: '80a09d66baa990429c2f5ae8a4306bf778a1b3775afd01cc2cc8bdbe9033769c'
+      });
       return new Response("Timeout: Image generation took too long", { status: 504 });
     }
+
+    // Track successful generation
+    await monitor.trackUsage({
+      endpoint: 'generate',
+      userId,
+      timestamp: Date.now(),
+      success: true,
+      cost: monitor.estimateCost('flux-canny-pro'),
+      modelVersion: '80a09d66baa990429c2f5ae8a4306bf778a1b3775afd01cc2cc8bdbe9033769c'
+    });
 
     return NextResponse.json(restoredImage);
   } catch (error) {
     console.error("Unexpected error:", error);
+    
+    // Track error
+    await monitor.trackUsage({
+      endpoint: 'generate',
+      userId,
+      timestamp: Date.now(),
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    });
+    
     return new Response(`Server error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
       status: 500
     });

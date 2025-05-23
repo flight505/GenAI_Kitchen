@@ -21,7 +21,7 @@
 * [x] **Optimize next.config.js:** Update the Next.js configuration to include all necessary image domains, optimization settings, and performance enhancements for Vercel deployment.
 * [x] **Deploy to Vercel:** Trigger the first deployment. Verify the build succeeds and the app loads on the Vercel preview URL. Test basic functionality (upload an image, ensure the generate API call runs). Monitor logs for any errors (missing environment vars, etc.) and fix any deployment-specific issues.
 * [ ] **Custom Domain & HTTPS:** (If applicable) Configure the production domain for the app on Vercel and ensure SSL is working. Update any application URLs or callbacks to use the correct production URL.
-* [ ] **Monitor Usage & Quotas:** Since Replicate API calls incur cost, set up monitoring/alerts for API usage. Consider implementing request tracking or integrating with Replicate's usage webhooks to watch the number of predictions. Also verify that the rate limiting (or any additional abuse prevention) is effective in the deployed environment.
+* [x] **Monitor Usage & Quotas:** Since Replicate API calls incur cost, set up monitoring/alerts for API usage. Consider implementing request tracking or integrating with Replicate's usage webhooks to watch the number of predictions. Also verify that the rate limiting (or any additional abuse prevention) is effective in the deployed environment.
 
 ## Integrate **Flux Canny Pro** for Structured Generation
 

@@ -10,6 +10,27 @@ export interface User {
 export const AUTH_TOKEN_KEY = "auth_token";
 
 /**
+ * Safe base64 decoder for browser environment
+ */
+function decodeBase64(str: string): string {
+  try {
+    // Replace URL-safe characters with standard base64 characters
+    const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
+    // Pad with '=' if necessary
+    const padded = base64 + '=='.substring(0, (4 - base64.length % 4) % 4);
+    // Decode using built-in atob with proper character handling
+    return decodeURIComponent(
+      Array.prototype.map.call(
+        window.atob(padded),
+        (c: string) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join('')
+    );
+  } catch (error) {
+    throw new Error('Failed to decode base64 string');
+  }
+}
+
+/**
  * Get the current authentication token from localStorage
  */
 export function getAuthToken(): string | null {
@@ -46,7 +67,7 @@ export function isAuthenticated(): boolean {
     if (parts.length !== 3) return false;
     
     // Decode payload to check expiration
-    const payload = JSON.parse(atob(parts[1]));
+    const payload = JSON.parse(decodeBase64(parts[1]));
     const now = Math.floor(Date.now() / 1000);
     
     return payload.exp > now;
@@ -63,7 +84,7 @@ export function getCurrentUser(): User | null {
   if (!token || !isAuthenticated()) return null;
   
   try {
-    const payload = JSON.parse(atob(token.split(".")[1]));
+    const payload = JSON.parse(decodeBase64(token.split(".")[1]));
     return {
       username: payload.username,
       token: token

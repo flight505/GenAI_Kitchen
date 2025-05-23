@@ -95,8 +95,8 @@ export default function ModernInpaintUI({
                   onMaskGenerated(maskUrl, prompt);
                 }
               }}
-              width={475}
-              height={475}
+              width={672}
+              height={384}
             />
           </div>
         </div>

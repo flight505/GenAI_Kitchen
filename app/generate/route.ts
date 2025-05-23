@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     //   }
     // }
 
-    const { imageUrl, prompt } = await request.json();
+    const { imageUrl, prompt, guidance, steps, strength } = await request.json();
 
     if (!imageUrl) {
       return new Response("Missing required parameter: imageUrl", { status: 400 });
@@ -59,9 +59,13 @@ export async function POST(request: Request) {
         input: {
           prompt: enhancePromptWithUnoformStyle(prompt, 'generation'),
           image_prompt: imageUrl,
-          width: 1024,
-          height: 1024,
-          aspect_ratio: "1:1",
+          image_prompt_strength: strength ? (1 - strength) * 0.5 : 0.15, // Lower values preserve original structure better
+          prompt_strength: strength || 0.6, // Controls how much of original image is preserved
+          guidance: guidance || 30,
+          num_inference_steps: steps || 28,
+          width: 1344,
+          height: 768,
+          aspect_ratio: "16:9",
           prompt_upsampling: true,
           safety_tolerance: 2,
           output_format: "webp",

@@ -11,6 +11,7 @@ interface KitchenDropDownProps<T extends string> {
   setValue: (value: T) => void;
   options: readonly T[];
   label: string;
+  disabled?: boolean;
 }
 
 export default function KitchenDropDown<T extends string>({
@@ -18,16 +19,20 @@ export default function KitchenDropDown<T extends string>({
   setValue,
   options,
   label,
+  disabled = false,
 }: KitchenDropDownProps<T>) {
   return (
-    <Listbox value={value} onChange={setValue}>
+    <Listbox value={value} onChange={setValue} disabled={disabled}>
       {({ open }) => (
         <>
           <Listbox.Label className="label">
             {label}
           </Listbox.Label>
           <div className="relative mt-1">
-            <Listbox.Button className="input-modern cursor-default text-left pr-10 hover:border-primary/50 transition-colors">
+            <Listbox.Button className={classNames(
+              "input-modern cursor-default text-left pr-10 transition-colors",
+              disabled ? "opacity-50 cursor-not-allowed" : "hover:border-primary/50"
+            )}>
               <span className="flex items-center">
                 <span className="ml-1 block truncate">{value}</span>
               </span>
@@ -50,9 +55,7 @@ export default function KitchenDropDown<T extends string>({
                 {options.map((option) => (
                   <Listbox.Option
                     key={option}
-                    className={({ active }) =>
-                      "dropdown-item"
-                    }
+                    className="dropdown-item"
                     value={option}
                   >
                     {({ selected }) => (

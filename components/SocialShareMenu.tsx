@@ -35,6 +35,57 @@ export default function SocialShareMenu({ imageUrl, kitchenPrompt, onClose }: So
     }
   };
 
+  // Crop image to specific aspect ratio
+  const cropImageToAspectRatio = async (originalImageUrl: string, targetWidth: number, targetHeight: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      if (!ctx) {
+        reject(new Error('Canvas context not available'));
+        return;
+      }
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = () => {
+        // Set canvas size to target dimensions
+        canvas.width = targetWidth;
+        canvas.height = targetHeight;
+        
+        // Calculate cropping to maintain aspect ratio and center the image
+        const sourceAspect = img.width / img.height;
+        const targetAspect = targetWidth / targetHeight;
+        
+        let sourceX = 0;
+        let sourceY = 0;
+        let sourceWidth = img.width;
+        let sourceHeight = img.height;
+        
+        if (sourceAspect > targetAspect) {
+          // Image is wider than target, crop horizontally
+          sourceWidth = img.height * targetAspect;
+          sourceX = (img.width - sourceWidth) / 2;
+        } else {
+          // Image is taller than target, crop vertically
+          sourceHeight = img.width / targetAspect;
+          sourceY = (img.height - sourceHeight) / 2;
+        }
+        
+        // Draw the cropped image
+        ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, targetWidth, targetHeight);
+        
+        // Convert to data URL
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+        resolve(dataUrl);
+      };
+      
+      img.onerror = () => reject(new Error('Failed to load image'));
+      img.src = originalImageUrl;
+    });
+  };
+
   // Add Unoform watermark to image
   const addWatermarkToImage = async (originalImageUrl: string): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -193,10 +244,20 @@ export default function SocialShareMenu({ imageUrl, kitchenPrompt, onClose }: So
   // Download for specific social platform
   const downloadForSocial = async (dimension: typeof socialDimensions[0]) => {
     try {
-      const resizedImage = await resizeImageForSocial(dimension.width, dimension.height);
+      // For square formats (Instagram), crop the image. For others, resize.
+      const aspectRatio = dimension.width / dimension.height;
+      let processedImage: string;
+      
+      if (aspectRatio === 1) {
+        // Square format - crop to center
+        processedImage = await cropImageToAspectRatio(imageUrl, dimension.width, dimension.height);
+      } else {
+        // Other formats - resize with letterboxing
+        processedImage = await resizeImageForSocial(dimension.width, dimension.height);
+      }
       
       const link = document.createElement('a');
-      link.href = resizedImage;
+      link.href = processedImage;
       link.download = `unoform-kitchen-${dimension.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}.jpg`;
       document.body.appendChild(link);
       link.click();

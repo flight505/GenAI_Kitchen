@@ -148,12 +148,13 @@ export default function SavedDesignsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {savedImages.map((image) => (
               <div key={image.id} className="card bg-white border border-neutral-200 shadow-soft overflow-hidden hover-lift transition-all duration-200">
-                <div className="aspect-square relative">
+                <div className="aspect-video relative h-48">
                   <Image
                     src={image.imageUrl}
                     alt="Saved kitchen design"
                     fill
                     className="object-cover cursor-pointer"
+                    style={{ objectFit: 'cover' }}
                     onClick={() => setSelectedImage(image)}
                   />
                   <div className="absolute top-3 left-3 flex items-center space-x-2">
@@ -237,6 +238,7 @@ export default function SavedDesignsPage() {
                     width={500}
                     height={500}
                     className="w-full h-auto rounded-lg"
+                    style={{ width: '100%', height: 'auto' }}
                   />
                 </div>
                 

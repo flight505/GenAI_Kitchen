@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     //   }
     // }
 
-    const { imageUrl, prompt } = await request.json();
+    const { imageUrl, prompt, guidance, steps } = await request.json();
 
     if (!imageUrl) {
       return new Response("Missing required parameter: imageUrl", { status: 400 });
@@ -55,12 +55,12 @@ export async function POST(request: Request) {
         input: {
           redux_image: imageUrl,
           prompt: prompt ? createStyleConsistentVariation(prompt) : "Danish Scandinavian kitchen design",
-          guidance: 3,
-          num_inference_steps: 28,
+          guidance: guidance || 3,
+          num_inference_steps: steps || 28,
           output_format: "webp",
           num_outputs: 1,
           megapixels: "1",
-          aspect_ratio: "custom"
+          aspect_ratio: "16:9"
         },
       }),
     });

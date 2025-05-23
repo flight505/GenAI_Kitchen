@@ -14,35 +14,72 @@ const MaskDrawingCanvas: React.FC<MaskDrawingCanvasProps> = ({
   height,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const maskCanvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
-  const [brushSize, setBrushSize] = useState(20);
+  const [brushSize, setBrushSize] = useState(30);
   const [isEraser, setIsEraser] = useState(false);
 
-  // Load the background image when the component mounts
+  // Initialize canvases
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const maskCanvas = maskCanvasRef.current;
+    if (!canvas || !maskCanvas) return;
     
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const maskCtx = maskCanvas.getContext("2d");
+    if (!ctx || !maskCtx) return;
     
     // Set canvas dimensions
     canvas.width = width;
     canvas.height = height;
+    maskCanvas.width = width;
+    maskCanvas.height = height;
     
-    // Clear the canvas with a transparent background
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Clear mask canvas with black background
+    maskCtx.fillStyle = "black";
+    maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
     
-    // Create an image element to load the background
+    // Load and draw the background image
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     };
     img.src = imageUrl;
   }, [imageUrl, width, height]);
 
-  // Handle mouse events for drawing
+  // Handle drawing
+  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!isDrawing) return;
+    
+    const canvas = canvasRef.current;
+    const maskCanvas = maskCanvasRef.current;
+    if (!canvas || !maskCanvas) return;
+    
+    const ctx = canvas.getContext("2d");
+    const maskCtx = maskCanvas.getContext("2d");
+    if (!ctx || !maskCtx) return;
+    
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    
+    // Draw on display canvas
+    ctx.globalCompositeOperation = isEraser ? "destination-out" : "source-over";
+    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+    ctx.beginPath();
+    ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    // Draw on mask canvas
+    maskCtx.globalCompositeOperation = "source-over";
+    maskCtx.fillStyle = isEraser ? "black" : "white";
+    maskCtx.beginPath();
+    maskCtx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+    maskCtx.fill();
+  };
+
   const startDrawing = (e: React.MouseEvent<HTMLCanvasElement>) => {
     setIsDrawing(true);
     draw(e);
@@ -52,179 +89,107 @@ const MaskDrawingCanvas: React.FC<MaskDrawingCanvasProps> = ({
     setIsDrawing(false);
   };
 
-  const draw = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!isDrawing) return;
-    
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-    
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    ctx.lineWidth = brushSize;
-    ctx.lineCap = "round";
-    
-    if (isEraser) {
-      // For eraser, we're revealing the original image
-      ctx.globalCompositeOperation = "destination-out";
-      ctx.strokeStyle = "rgba(0,0,0,1)";
-    } else {
-      // For brush, we're masking (painting white)
-      ctx.globalCompositeOperation = "source-over";
-      ctx.strokeStyle = "rgba(255,255,255,0.5)";
-    }
-    
-    ctx.beginPath();
-    ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-    ctx.fill();
-  };
-
   const handleClearMask = () => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const maskCanvas = maskCanvasRef.current;
+    if (!canvas || !maskCanvas) return;
     
     const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const maskCtx = maskCanvas.getContext("2d");
+    if (!ctx || !maskCtx) return;
     
-    // Clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Clear mask canvas
+    maskCtx.fillStyle = "black";
+    maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
     
     // Redraw the background image
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
     };
     img.src = imageUrl;
   };
 
   const handleApplyMask = () => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+    const maskCanvas = maskCanvasRef.current;
+    if (!maskCanvas) return;
     
-    // Create a new canvas for the mask only
-    const maskCanvas = document.createElement('canvas');
-    maskCanvas.width = canvas.width;
-    maskCanvas.height = canvas.height;
-    const maskCtx = maskCanvas.getContext('2d');
-    if (!maskCtx) return;
-    
-    // Set background to black
-    maskCtx.fillStyle = "black";
-    maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
-    
-    // Copy the white parts from the drawing canvas
-    maskCtx.globalCompositeOperation = "source-over";
-    
-    // Get the original canvas data
-    const originalCanvas = canvasRef.current;
-    if (!originalCanvas) return;
-    const originalCtx = originalCanvas.getContext('2d');
-    if (!originalCtx) return;
-    
-    const imageData = originalCtx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    
-    // Create a new ImageData for the mask
-    const maskImageData = maskCtx.createImageData(canvas.width, canvas.height);
-    const maskData = maskImageData.data;
-    
-    // For each pixel, if it's not the background image color, make it white in the mask
-    for (let i = 0; i < data.length; i += 4) {
-      // If pixel has any transparency (was drawn on), make it white in the mask
-      if (data[i + 3] < 255) {
-        maskData[i] = 255;     // R
-        maskData[i + 1] = 255; // G
-        maskData[i + 2] = 255; // B
-        maskData[i + 3] = 255; // A
-      }
-    }
-    
-    // Put the mask data on the mask canvas
-    maskCtx.putImageData(maskImageData, 0, 0);
-    
-    // Get the data URL of the mask canvas
+    // Get the mask data URL
     const maskDataUrl = maskCanvas.toDataURL('image/png');
-    
-    // Call the callback with the mask data URL
     onMaskGenerated(maskDataUrl);
   };
 
   return (
     <div className="flex flex-col items-center">
-      <div className="relative border rounded-lg overflow-hidden">
+      <div className="relative">
+        {/* Display canvas */}
         <canvas
           ref={canvasRef}
           onMouseDown={startDrawing}
           onMouseUp={stopDrawing}
           onMouseMove={draw}
           onMouseLeave={stopDrawing}
-          className="cursor-crosshair"
+          className="cursor-crosshair border rounded-lg"
           style={{ 
             width: `${width}px`, 
             height: `${height}px`,
-            background: "transparent" 
+            maxWidth: '100%'
           }}
+        />
+        {/* Hidden mask canvas */}
+        <canvas
+          ref={maskCanvasRef}
+          style={{ display: 'none' }}
         />
       </div>
       
       <div className="flex flex-wrap justify-center mt-4 gap-3">
         <div className="flex items-center">
-          <label htmlFor="brushSize" className="mr-2 text-sm">Brush Size:</label>
+          <label htmlFor="brushSize" className="mr-2 text-sm font-medium">Brush Size:</label>
           <input
             id="brushSize"
             type="range"
-            min="5"
-            max="50"
+            min="10"
+            max="80"
             value={brushSize}
             onChange={(e) => setBrushSize(parseInt(e.target.value))}
-            className="w-24 accent-unoform-gold"
+            className="w-24"
           />
-          <span className="ml-1 text-sm">{brushSize}px</span>
+          <span className="ml-2 text-sm">{brushSize}px</span>
         </div>
         
         <button
           onClick={() => setIsEraser(false)}
-          className={`px-3 py-1 text-sm ${
-            !isEraser ? "bg-unoform-gold text-white" : "bg-unoform-gray-light text-unoform-black"
-          }`}
+          className={`btn-sm ${!isEraser ? "btn-primary" : "btn-outline"}`}
         >
-          Brush
+          Draw
         </button>
         
         <button
           onClick={() => setIsEraser(true)}
-          className={`px-3 py-1 text-sm ${
-            isEraser ? "bg-unoform-gold text-white" : "bg-unoform-gray-light text-unoform-black"
-          }`}
+          className={`btn-sm ${isEraser ? "btn-primary" : "btn-outline"}`}
         >
-          Eraser
+          Erase
         </button>
         
         <button
           onClick={handleClearMask}
-          className="px-3 py-1 text-sm bg-unoform-gray-light text-unoform-black hover:bg-unoform-gray transition-colors"
+          className="btn-sm btn-secondary"
         >
-          Clear
+          Clear All
         </button>
         
         <button
           onClick={handleApplyMask}
-          className="px-3 py-1 text-sm bg-unoform-gold text-white hover:bg-unoform-gold-dark transition-colors"
+          className="btn-sm btn-default"
         >
-          Apply Inpaint
+          Apply Changes
         </button>
-      </div>
-      
-      <div className="mt-2 text-sm text-unoform-gray-dark">
-        Paint over the areas you want to change
       </div>
     </div>
   );
 };
 
-export default MaskDrawingCanvas; 
+export default MaskDrawingCanvas;

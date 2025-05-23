@@ -17,12 +17,6 @@ import downloadPhoto from "../../utils/downloadPhoto";
 import KitchenDropDown from "../../components/KitchenDropDown";
 import { 
   KitchenDesignSelections,
-  CabinetStyle,
-  CabinetFinish,
-  CountertopMaterial,
-  FlooringType,
-  WallColor,
-  HardwareFinish,
   cabinetStyles,
   cabinetFinishes,
   countertopMaterials,
@@ -33,7 +27,7 @@ import {
 } from "../../utils/kitchenTypes";
 import ModernInpaintUI from "../../components/ModernInpaintUI";
 import SocialShareMenu from "../../components/SocialShareMenu";
-import { isAuthenticated, getCurrentUser } from "../../utils/auth";
+import { getCurrentUser } from "../../utils/auth";
 
 const options: UploadWidgetConfig = {
   apiKey: !!process.env.NEXT_PUBLIC_UPLOAD_API_KEY
@@ -88,10 +82,21 @@ export default function DreamPage() {
   const [inpaintPrompt, setInpaintPrompt] = useState<string>("");
   const [generating, setGenerating] = useState<boolean>(false);
   const [showShareMenu, setShowShareMenu] = useState<boolean>(false);
+  const [showAdvancedControls, setShowAdvancedControls] = useState<boolean>(false);
+  const [advancedSettings, setAdvancedSettings] = useState({
+    guidance: 8,
+    steps: 20,
+    strength: 0.8,
+    preserveAngle: true,
+    wallType: "smooth",
+    ceilingType: "flat",
+    preserveWalls: false,
+    preserveFloor: false,
+    preserveCeiling: false,
+    preserveWindows: false
+  });
   
   const {
-    history,
-    currentIndex,
     canUndo,
     canRedo,
     addToHistory,
@@ -123,7 +128,7 @@ export default function DreamPage() {
             url: imageUrl,
             type: 'original'
           });
-          generatePhoto(imageUrl);
+          // Don't auto-generate - wait for user to click Generate button
         }
       }}
       width="670px"
@@ -131,7 +136,12 @@ export default function DreamPage() {
     />
   );
 
-  async function generatePhoto(fileUrl: string) {
+  async function generatePhoto(fileUrl?: string) {
+    const imageToGenerate = fileUrl || originalPhoto;
+    if (!imageToGenerate) {
+      setError("Please upload an image first");
+      return;
+    }
     await new Promise((resolve) => setTimeout(resolve, 200));
     setLoading(true);
     const res = await fetch("/generate", {
@@ -140,8 +150,21 @@ export default function DreamPage() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ 
-        imageUrl: fileUrl, 
-        prompt: generatePromptFromSelections(kitchenSelections)
+        imageUrl: imageToGenerate, 
+        prompt: generatePromptFromSelections(kitchenSelections) + 
+          (showAdvancedControls && advancedSettings.wallType !== "smooth" && !advancedSettings.preserveWalls ? `, ${advancedSettings.wallType} walls` : "") +
+          (showAdvancedControls && advancedSettings.ceilingType !== "flat" && !advancedSettings.preserveCeiling ? `, ${advancedSettings.ceilingType} ceiling` : "") +
+          (showAdvancedControls && advancedSettings.preserveWalls ? ", keep existing walls unchanged" : "") +
+          (showAdvancedControls && advancedSettings.preserveFloor ? ", keep existing floor unchanged" : "") +
+          (showAdvancedControls && advancedSettings.preserveCeiling ? ", keep existing ceiling unchanged" : "") +
+          (showAdvancedControls && advancedSettings.preserveWindows ? ", keep existing windows unchanged" : ""),
+        ...(showAdvancedControls && {
+          guidance: advancedSettings.guidance,
+          steps: advancedSettings.steps,
+          strength: (advancedSettings.preserveAngle || advancedSettings.preserveWalls || advancedSettings.preserveFloor || 
+                    advancedSettings.preserveCeiling || advancedSettings.preserveWindows) ? 
+                    Math.min(0.4, advancedSettings.strength) : advancedSettings.strength
+        })
       }),
     });
 
@@ -255,7 +278,18 @@ export default function DreamPage() {
       },
       body: JSON.stringify({
         imageUrl: restoredImage,
-        prompt: generatePromptFromSelections(kitchenSelections),
+        prompt: generatePromptFromSelections(kitchenSelections) + 
+          (showAdvancedControls && advancedSettings.wallType !== "smooth" && !advancedSettings.preserveWalls ? `, ${advancedSettings.wallType} walls` : "") +
+          (showAdvancedControls && advancedSettings.ceilingType !== "flat" && !advancedSettings.preserveCeiling ? `, ${advancedSettings.ceilingType} ceiling` : "") +
+          (showAdvancedControls && advancedSettings.preserveWalls ? ", keep existing walls unchanged" : "") +
+          (showAdvancedControls && advancedSettings.preserveFloor ? ", keep existing floor unchanged" : "") +
+          (showAdvancedControls && advancedSettings.preserveCeiling ? ", keep existing ceiling unchanged" : "") +
+          (showAdvancedControls && advancedSettings.preserveWindows ? ", keep existing windows unchanged" : ""),
+        ...(showAdvancedControls && {
+          guidance: advancedSettings.guidance,
+          steps: advancedSettings.steps,
+          strength: advancedSettings.strength
+        })
       }),
     });
 
@@ -402,6 +436,146 @@ export default function DreamPage() {
                         label="Hardware Finish"
                       />
                     </div>
+                    
+                    {/* Advanced Controls Toggle */}
+                    <div className="mt-4">
+                      <button
+                        onClick={() => setShowAdvancedControls(!showAdvancedControls)}
+                        className="btn-outline btn-sm"
+                      >
+                        {showAdvancedControls ? 'Hide' : 'Show'} Advanced Controls
+                      </button>
+                    </div>
+                    
+                    {/* Advanced Controls Panel */}
+                    {showAdvancedControls && (
+                      <div className="mt-4 p-4 border border-muted rounded-lg space-y-4">
+                        <h3 className="font-medium text-foreground">Advanced Settings</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-1">
+                              Guidance Scale ({advancedSettings.guidance})
+                            </label>
+                            <input
+                              type="range"
+                              min="1"
+                              max="20"
+                              value={advancedSettings.guidance}
+                              onChange={(e) => setAdvancedSettings({...advancedSettings, guidance: Number(e.target.value)})}
+                              className="w-full"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-1">
+                              Steps ({advancedSettings.steps})
+                            </label>
+                            <input
+                              type="range"
+                              min="10"
+                              max="50"
+                              value={advancedSettings.steps}
+                              onChange={(e) => setAdvancedSettings({...advancedSettings, steps: Number(e.target.value)})}
+                              className="w-full"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-1">
+                              Strength ({advancedSettings.strength})
+                            </label>
+                            <input
+                              type="range"
+                              min="0.1"
+                              max="1"
+                              step="0.1"
+                              value={advancedSettings.strength}
+                              onChange={(e) => setAdvancedSettings({...advancedSettings, strength: Number(e.target.value)})}
+                              className="w-full"
+                            />
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id="preserveAngle"
+                              checked={advancedSettings.preserveAngle}
+                              onChange={(e) => setAdvancedSettings({...advancedSettings, preserveAngle: e.target.checked})}
+                              className="w-4 h-4"
+                            />
+                            <label htmlFor="preserveAngle" className="text-sm font-medium text-foreground">
+                              Preserve Original Angle
+                            </label>
+                          </div>
+                          <KitchenDropDown
+                            value={advancedSettings.wallType}
+                            setValue={(value) => setAdvancedSettings({...advancedSettings, wallType: value})}
+                            options={["smooth", "textured", "brick", "tile", "wood paneling"]}
+                            label="Wall Type"
+                            disabled={advancedSettings.preserveWalls}
+                          />
+                          <KitchenDropDown
+                            value={advancedSettings.ceilingType}
+                            setValue={(value) => setAdvancedSettings({...advancedSettings, ceilingType: value})}
+                            options={["flat", "coffered", "vaulted", "exposed beams", "tray"]}
+                            label="Ceiling Type"
+                            disabled={advancedSettings.preserveCeiling}
+                          />
+                        </div>
+                        
+                        {/* Preservation Options */}
+                        <div className="border-t border-muted pt-4 mt-4">
+                          <h4 className="font-medium text-foreground mb-3">Preserve Existing Elements</h4>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id="preserveWalls"
+                                checked={advancedSettings.preserveWalls}
+                                onChange={(e) => setAdvancedSettings({...advancedSettings, preserveWalls: e.target.checked})}
+                                className="w-4 h-4"
+                              />
+                              <label htmlFor="preserveWalls" className="text-sm font-medium text-foreground">
+                                Keep Walls
+                              </label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id="preserveFloor"
+                                checked={advancedSettings.preserveFloor}
+                                onChange={(e) => setAdvancedSettings({...advancedSettings, preserveFloor: e.target.checked})}
+                                className="w-4 h-4"
+                              />
+                              <label htmlFor="preserveFloor" className="text-sm font-medium text-foreground">
+                                Keep Floor
+                              </label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id="preserveCeiling"
+                                checked={advancedSettings.preserveCeiling}
+                                onChange={(e) => setAdvancedSettings({...advancedSettings, preserveCeiling: e.target.checked})}
+                                className="w-4 h-4"
+                              />
+                              <label htmlFor="preserveCeiling" className="text-sm font-medium text-foreground">
+                                Keep Ceiling
+                              </label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                id="preserveWindows"
+                                checked={advancedSettings.preserveWindows}
+                                onChange={(e) => setAdvancedSettings({...advancedSettings, preserveWindows: e.target.checked})}
+                                className="w-4 h-4"
+                              />
+                              <label htmlFor="preserveWindows" className="text-sm font-medium text-foreground">
+                                Keep Windows
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="mt-4 w-full max-w-2xl">
                     <div className="flex mt-6 w-96 items-center space-x-3">
@@ -442,17 +616,28 @@ export default function DreamPage() {
               )}
               {!originalPhoto && <UploadDropZone />}
               {originalPhoto && !restoredImage && (
-                <Image
-                  alt="original photo"
-                  src={originalPhoto}
-                  className="rounded-2xl h-96"
-                  width={475}
-                  height={475}
-                  style={{ width: 'auto', height: 'auto' }}
-                />
+                <>
+                  <Image
+                    alt="original photo"
+                    src={originalPhoto}
+                    className="rounded-2xl max-w-3xl w-full"
+                    width={768}
+                    height={432}
+                    style={{ width: '100%', height: 'auto' }}
+                  />
+                  <div className="flex justify-center mt-8">
+                    <button
+                      onClick={() => generatePhoto()}
+                      disabled={loading}
+                      className="btn-primary btn-lg hover-lift"
+                    >
+                      Generate Kitchen Design
+                    </button>
+                  </div>
+                </>
               )}
               {restoredImage && originalPhoto && !sideBySide && (
-                <div className="flex sm:space-x-4 sm:flex-row flex-col">
+                <div className="flex flex-col space-y-8 max-w-6xl mx-auto">
                   <div className="card overflow-hidden">
                     <div className="card-header">
                       <h2 className="card-title text-lg">Original Kitchen</h2>
@@ -461,14 +646,14 @@ export default function DreamPage() {
                       <Image
                         alt="original kitchen photo"
                         src={originalPhoto}
-                        className="w-full h-96 object-cover"
-                        width={475}
-                        height={475}
+                        className="w-full object-cover"
+                        width={1344}
+                        height={768}
                         style={{ width: '100%', height: 'auto' }}
                       />
                     </div>
                   </div>
-                  <div className="sm:mt-0 mt-8 card overflow-hidden">
+                  <div className="card overflow-hidden">
                     <div className="card-header">
                       <h2 className="card-title text-lg">Generated Kitchen</h2>
                     </div>
@@ -477,9 +662,9 @@ export default function DreamPage() {
                         <Image
                           alt="generated kitchen"
                           src={restoredImage}
-                          className="w-full h-96 object-cover cursor-zoom-in"
-                          width={475}
-                          height={475}
+                          className="w-full object-cover cursor-zoom-in"
+                          width={1344}
+                          height={768}
                           style={{ width: '100%', height: 'auto' }}
                           onLoadingComplete={() => setRestoredLoaded(true)}
                         />

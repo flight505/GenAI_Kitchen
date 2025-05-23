@@ -60,7 +60,7 @@ export async function POST(request: Request) {
           guidance: 60,
           prompt_upsampling: true,
           safety_tolerance: 2,
-          output_format: "webp"
+          output_format: "png"
         },
       }),
     });

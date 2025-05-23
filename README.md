@@ -8,6 +8,24 @@ This project allows you to transform any kitchen using AI. Upload a photo of you
 
 It uses an ML model called [Flux Canny Pro](https://replicate.com/black-forest-labs/flux-canny-pro) to generate styled variations of kitchens. This application gives you the ability to upload a photo of any kitchen, which will send it through this ML Model using a Next.js API route, and return your generated kitchen. The ML Model is hosted on [Replicate](https://replicate.com) and [Bytescale](https://www.bytescale.com/) is used for image storage.
 
+## Image Processing Constraints
+
+### Upload Requirements
+- **File Types**: JPEG, JPG, and PNG formats are accepted
+- **Maximum File Size**: 5MB per image
+- **Automatic Resizing**: Uploaded images are automatically resized to fit within 1344x768 pixels (16:9 aspect ratio) for optimal processing
+- **Format Conversion**: All images are automatically converted to JPEG format with 90% quality for consistency
+
+### Output Specifications
+- **Resolution**: All generated images are produced at 1344x768 pixels (16:9 aspect ratio)
+- **Format**: WebP format for generated images, PNG for inpainted images
+- **Quality**: High quality output with optimized file sizes
+
+### Processing Limits
+- **Rate Limiting**: Users without authentication have a limit of 5 generations per 24 hours
+- **Processing Time**: Image generation typically takes 20-30 seconds
+- **Safety Filters**: NSFW content is automatically filtered with a permissive tolerance level
+
 ## Running Locally
 
 ### Cloning the repository the local machine.

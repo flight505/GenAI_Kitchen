@@ -28,6 +28,7 @@ import {
 import ModernInpaintUI from "../../components/ModernInpaintUI";
 import SocialShareMenu from "../../components/SocialShareMenu";
 import { getCurrentUser } from "../../utils/auth";
+import Toast from "../../components/Toast";
 
 const options: UploadWidgetConfig = {
   apiKey: !!process.env.NEXT_PUBLIC_UPLOAD_API_KEY
@@ -35,6 +36,7 @@ const options: UploadWidgetConfig = {
       : "free",
   maxFileCount: 1,
   mimeTypes: ["image/jpeg", "image/png", "image/jpg"],
+  maxFileSizeBytes: 5 * 1024 * 1024, // 5MB max file size
   editor: { images: { crop: false } },
   styles: {
     colors: {
@@ -95,6 +97,7 @@ export default function DreamPage() {
     preserveCeiling: false,
     preserveWindows: false
   });
+  const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'warning' | 'error' } | null>(null);
   
   const {
     canUndo,
@@ -124,6 +127,19 @@ export default function DreamPage() {
             url: imageUrl,
             type: 'original'
           });
+          // Show notification about image processing
+          const fileSize = image.originalFile.size;
+          if (fileSize > 3 * 1024 * 1024) { // Over 3MB
+            setToast({
+              message: 'Large image uploaded. It will be automatically resized to 1344x768 pixels for optimal processing.',
+              type: 'info'
+            });
+          } else {
+            setToast({
+              message: 'Image uploaded successfully! Your image will be optimized to 16:9 aspect ratio.',
+              type: 'success'
+            });
+          }
           // Don't auto-generate - wait for user to click Generate button
         }
       }}
@@ -610,7 +626,14 @@ export default function DreamPage() {
                   restored={restoredImage!}
                 />
               )}
-              {!originalPhoto && <UploadDropZone />}
+              {!originalPhoto && (
+                <>
+                  <UploadDropZone />
+                  <p className="text-sm text-muted-foreground mt-3 max-w-xl">
+                    Accepted formats: JPEG, PNG (max 5MB). Images will be automatically resized to 16:9 aspect ratio (1344x768 pixels) for optimal results.
+                  </p>
+                </>
+              )}
               {originalPhoto && !restoredImage && (
                 <>
                   <Image
@@ -837,6 +860,13 @@ export default function DreamPage() {
         </ResizablePanel>
       </main>
       <Footer />
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }

@@ -280,7 +280,9 @@ We have successfully implemented:
     - **Inpainting Fixes**: 
       - Fixed output format from "webp" to "png" for Flux Fill Pro compatibility
       - Rewrote mask drawing component with dual-canvas approach
-      - Updated canvas dimensions from 475x475 to 672x384 (16:9)
+      - Fixed mask dimensions mismatch - updated from 672x384 to 1344x768 to match generated image size
+      - Implemented responsive canvas display (max-width 672px) while maintaining full resolution mask
+      - Added willReadFrequently option to canvas contexts for better performance
       - Improved drawing controls with larger default brush size (30px)
     - **TypeScript Fixes**: Removed unused variables and fixed all compilation warnings
     - **UI Improvements**: 

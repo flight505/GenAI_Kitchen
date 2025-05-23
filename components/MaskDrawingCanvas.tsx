@@ -25,8 +25,8 @@ const MaskDrawingCanvas: React.FC<MaskDrawingCanvasProps> = ({
     const maskCanvas = maskCanvasRef.current;
     if (!canvas || !maskCanvas) return;
     
-    const ctx = canvas.getContext("2d");
-    const maskCtx = maskCanvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const maskCtx = maskCanvas.getContext("2d", { willReadFrequently: true });
     if (!ctx || !maskCtx) return;
     
     // Set canvas dimensions
@@ -57,8 +57,8 @@ const MaskDrawingCanvas: React.FC<MaskDrawingCanvasProps> = ({
     const maskCanvas = maskCanvasRef.current;
     if (!canvas || !maskCanvas) return;
     
-    const ctx = canvas.getContext("2d");
-    const maskCtx = maskCanvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const maskCtx = maskCanvas.getContext("2d", { willReadFrequently: true });
     if (!ctx || !maskCtx) return;
     
     const rect = canvas.getBoundingClientRect();
@@ -94,8 +94,8 @@ const MaskDrawingCanvas: React.FC<MaskDrawingCanvasProps> = ({
     const maskCanvas = maskCanvasRef.current;
     if (!canvas || !maskCanvas) return;
     
-    const ctx = canvas.getContext("2d");
-    const maskCtx = maskCanvas.getContext("2d");
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    const maskCtx = maskCanvas.getContext("2d", { willReadFrequently: true });
     if (!ctx || !maskCtx) return;
     
     // Clear mask canvas
@@ -133,9 +133,9 @@ const MaskDrawingCanvas: React.FC<MaskDrawingCanvasProps> = ({
           onMouseLeave={stopDrawing}
           className="cursor-crosshair border rounded-lg"
           style={{ 
-            width: `${width}px`, 
-            height: `${height}px`,
-            maxWidth: '100%'
+            width: '100%', 
+            maxWidth: '672px',
+            height: 'auto'
           }}
         />
         {/* Hidden mask canvas */}

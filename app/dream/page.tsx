@@ -115,11 +115,7 @@ export default function DreamPage() {
           const imageName = image.originalFile.originalFileName;
           const imageUrl = UrlBuilder.url({
             accountId: image.accountId,
-            filePath: image.filePath,
-            options: {
-              transformation: "preset",
-              transformationPreset: "thumbnail"
-            }
+            filePath: image.filePath
           });
           setPhotoName(imageName);
           setOriginalPhoto(imageUrl);

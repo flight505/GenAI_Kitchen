@@ -272,20 +272,45 @@ We have successfully implemented:
     - **Layout Updates**: Clean white backgrounds, gray-dark borders, minimal design aesthetic
     - **Font Sizes**: Implemented Unoform's exact typography scale (82px display, 42px headings, 14px body)
 
+15. **Recent Updates and Fixes** (Latest Session):
+    - **Image Aspect Ratio**: Changed from 1:1 to 16:9 (1344x768) for better kitchen visualization
+    - **Social Media Cropping**: Added intelligent cropping for 1:1 formats (Instagram) while maintaining 16:9 for other platforms
+    - **Upload Flow Changes**: Removed auto-generation on upload, now requires explicit "Generate Kitchen Design" button click
+    - **Preservation Options**: Added checkboxes to preserve walls, floors, ceilings, and windows during generation
+    - **Inpainting Fixes**: 
+      - Fixed output format from "webp" to "png" for Flux Fill Pro compatibility
+      - Rewrote mask drawing component with dual-canvas approach
+      - Updated canvas dimensions from 475x475 to 672x384 (16:9)
+      - Improved drawing controls with larger default brush size (30px)
+    - **TypeScript Fixes**: Removed unused variables and fixed all compilation warnings
+    - **UI Improvements**: 
+      - Disabled wall/ceiling type dropdowns when preservation is enabled
+      - Added "Preserve Existing Elements" section in advanced controls
+      - Fixed all Next.js Image component warnings with proper style attributes
+
 **Current Status**: 
 - ✅ **Development Environment**: All features working locally with official Unoform branding
 - ✅ **Build System**: No compilation errors, ready for production deployment
 - ✅ **API Integration**: Updated model versions and error handling implemented
 - ✅ **UI/UX**: Professional interface matching Unoform's official brand guidelines
 - ✅ **Authentication**: Complete user authentication and image saving system
-- ✅ **Vercel Deployment**: Successfully deployed to production
-- ✅ **Advanced Controls**: Added toggle for advanced image generation parameters
-- ✅ **Angle Preservation**: Implemented controls to preserve original image perspective
-- ✅ **Extended Parameters**: Exposed guidance scale, steps, strength, wall type, and ceiling type controls
+- ✅ **Vercel Deployment**: Successfully deployed to production with latest updates
+- ✅ **Advanced Controls**: Toggle for advanced parameters with preservation options
+- ✅ **Image Generation**: 16:9 aspect ratio with proper angle/perspective preservation
+- ✅ **Inpainting**: Fully functional with correct mask generation and API integration
+- ✅ **Social Sharing**: Smart image cropping for different social media platforms
 
 **Deployment Details**: 
 - **Production URL**: https://genaikitchen-avse9hgjh-jespers-projects-dbff6d83.vercel.app
 - **Environment Variables Required**: REPLICATE_API_KEY, UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN, JWT_SECRET
 - **Authentication Credentials**: demo_user/KitchenDesign123, design_team/ScandinavianStyle!, unoform_admin/UnoKitchen2024!
+- **Latest Deployment**: Triggered with commit 5b3ec0e on main branch
 
-The application now features a complete, production-ready implementation with official Unoform branding, user authentication, and image saving capabilities.
+The application now features a complete, production-ready implementation with:
+- Official Unoform branding and design system
+- User authentication and image saving
+- Advanced generation controls with preservation options
+- Working inpainting with proper 16:9 canvas
+- Smart social media sharing with platform-specific cropping
+- User-controlled generation flow (no auto-generation)
+- All known bugs fixed and TypeScript warnings resolved

@@ -169,28 +169,85 @@
 
 ## Unoform Style Fine-Tuning Preparation
 
-* [ ] **Gather Unoform Kitchen Images:** Collect a dataset of high-quality images showcasing Unoform kitchens. Aim for at least 50 images (more is better, up to ~100) that cover a variety of kitchen designs but all reflecting Unoform's signature style (e.g. sleek Danish modern cabinetry, specific handles, typical color schemes). Include diversity in lighting conditions, angles, and layouts to make the model robust. Ensure you have the right to use these images for training (copyright cleared or internal assets).
-* [ ] **Create Training Dataset:** Organize the images into a folder and create corresponding text captions for each image. Each image file (e.g. `kitchen1.jpg`) should have a caption file (e.g. `kitchen1.txt`) containing a description of that kitchen.
-* [ ] **Caption with Trigger Word:** Write detailed captions that not only describe the kitchen (colors, materials, style) but also include a special trigger word to represent **Unoform's style**. For example, decide on using the token `<unoform>` at the start of each caption (or the phrase "Unoform kitchen"). An example caption: "`<unoform> kitchen interior, open-plan design with white matte cabinets, oak wood accents, modern appliances.`" – this teaches the model that whenever the `<unoform>` token is present, those style elements should be expected.
-* [ ] **Verify Caption Quality:** Ensure the captions are accurate and emphasize unique Unoform features (e.g. "clean lines, minimalistic design, high-end appliances, etc."). Also include general kitchen descriptors so the model doesn't forget how to render kitchens generically. All captions should include the `<unoform>` token so that it becomes associated with the style across the board. Peer review a few to maintain consistency in format and detail.
-* [ ] **Preprocessing:** Resize or crop training images if needed (e.g. to a uniform dimension or aspect ratio consistent with model requirements, often 512x512 or 768x768 for diffusion models). However, since Flux is capable of high-res, we might use higher resolution images if memory allows. Ensure images are in JPEG/PNG format and not too large (to fit GPU memory during training).
-* [ ] **Split Dataset (Optional):** If you have enough data, set aside a few images (5-10) as a validation set to periodically evaluate the fine-tune (not strictly necessary but useful to gauge overfitting). These val images should also have captions (with `<unoform>` token) but won't be used in training.
+* [ ] **Gather Unoform Kitchen Images:** Collect a dataset of high-quality images showcasing Unoform kitchens. For Replicate's fast training:
+  - **Minimum**: 10-20 high-quality images for LoRA training
+  - **Optimal**: 30-50 images for better style capture
+  - **Requirements**: High resolution (at least 1024x1024), diverse angles and lighting
+  - **Legal**: Ensure all images are owned by Unoform or properly licensed
+
+* [ ] **Prepare Training Archive:** Create a ZIP file with your images:
+  - Name images descriptively (e.g. `modern_white_kitchen_01.jpg`)
+  - Use consistent high quality (JPEG or PNG)
+  - No need for separate caption files - Replicate's trainers handle this
+  - Upload to a cloud service (Google Drive, Dropbox, etc.) for easy access
+
+* [ ] **Define Trigger Word:** Choose a unique trigger word for Unoform style:
+  - Recommended: `unoform` or `unfrm` (short, unique, unlikely to conflict)
+  - This word will activate the trained style in prompts
+  - Document this for consistent usage across the team
+
+* [ ] **Test Dataset Quality:** Before training, verify:
+  - All images clearly represent Unoform's design aesthetic
+  - No duplicate or near-duplicate images
+  - Good variety of kitchen styles within Unoform's brand
+  - Images are sharp and well-lit
+  - No watermarks or text overlays
 
 ## Unoform Model Fine-Tuning & Deployment
 
-* [ ] **Choose Base Model:** Decide which base model to fine-tune. Since Flux 1.1 Pro (the one used via API) is closed-source, we cannot fine-tune it directly. Instead, use an open FLUX model checkpoint as base. Two likely options are **FLUX 1.0 Dev** and **FLUX 1.0 Schnell**. *Flux-Dev* is larger but non-commercial licensed, whereas *Flux-Schnell* is smaller but Apache 2.0 (commercial-friendly). If Unoform intends to use this fine-tuned model for business, choose **FLUX Schnell** to avoid license issues (Schnell is faster and allowed in production).
-* [ ] **Set Up Training Environment:** Prepare a GPU environment for fine-tuning. This could be a Jupyter notebook or script using Hugging Face Diffusers library, or a custom training job using Replicate's Cog system. Ensure you have the FLUX base model weights accessible. For HuggingFace: you might load `black-forest-labs/FLUX-1-Dev` or `.../FLUX-1-Schnell` from the Hub as your model.
-* [ ] **Training Method:** Use a fine-tuning approach suitable for adding a new style. One approach is **DreamBooth** (treating "Unoform style" as a new concept to learn). Another is fine-tuning the entire model on our dataset (if large enough) with lower learning rate. DreamBooth might be simpler: it usually requires a class word (like "kitchen") and the style token. Since this is a style (not a single object/person), you might not need regularization images for a class, or could use a few generic kitchen images as regularization to prevent overfitting.
-* [ ] **Run Fine-Tuning:** Execute the training process on the dataset. Monitor the loss and, if possible, generate sample images every few epochs to see if the `<unoform>` token indeed yields the Unoform look. Training might take a few hours depending on model and GPU. Aim to find a point where the model has learned the style but not overfitted (the generated images should look like *new* Unoform kitchens, not just recreations of training images).
-* [ ] **Evaluate Model:** After training, test the model by generating images with prompts that include the `<unoform>` token (e.g. "`<unoform> kitchen with matte black cabinets and white marble countertop`"). Check that the outputs consistently reflect Unoform's design language (compare them with actual Unoform catalog images for validation). Make sure general coherence and quality are maintained.
-* [ ] **Deploy Fine-Tuned Model to Replicate:** Package the fine-tuned model for inference. If using Replicate, you can create a custom model endpoint:
+* [ ] **Choose Training Service:** Use Replicate's managed training services for simplicity:
+  - **Fast Flux Trainer**: https://replicate.com/replicate/fast-flux-trainer/train (Recommended - optimized for speed)
+  - **Flux Dev LoRA Trainer**: https://replicate.com/ostris/flux-dev-lora-trainer/train (More control over parameters)
+  - Both create LoRA adaptors that work with existing Flux models
 
-  * [ ] Use Replicate's **Cog** tool to containerize the model. Write a `cog.yaml` and a `predict.py` that loads the fine-tuned weights and performs inference given a prompt (and optional control image if we fine-tuned a control version). Alternatively, if the fine-tuned model is purely text-to-image (no control), you might integrate it in a two-step pipeline (generate image with fine-tuned model, then use original image + that output in Flux Canny Pro if needed – though ideally we fine-tune a control-net variant).
-  * [ ] Push the model to Replicate as a private model. This will give you a new model name (likely something like `your-organization/flux-unoform:latest`). Note the model version ID after uploading.
-  * [ ] Update the application's generation endpoints to use this new model. For example, change the Flux Canny Pro model ID to the fine-tuned model's ID for the structured generation step. Do similarly for inpainting if you fine-tuned an inpainting model or if you keep using base Fill Pro.
-  * [ ] Test the end-to-end flow now using the fine-tuned model via Replicate. Ensure that the `prompt` including `<unoform>` now produces results that are unmistakably in Unoform style, even with challenging prompts. If something fails (e.g. model not loading on Replicate), debug the deployment (check logs, memory, etc.) or adjust the Cog config.
-* [ ] **License Documentation:** Clearly document the licensing of the fine-tuned model. Since we chose FLUX Schnell (Apache 2.0), note that the fine-tuned model can be used commercially. If any part of the pipeline still uses a non-commercial component (e.g. if we temporarily use Flux Dev for a test), call that out and replace it before production. In the repository README or documentation, include a note that *"The Unoform fine-tuned model is based on FLUX Schnell (Apache 2.0), fine-tuned on Unoform's proprietary images."*.
-* [ ] **Final Integration Testing:** Do a complete run-through of the application with the fine-tuned model in place. Upload a kitchen image, select design options, generate the redesign, use inpainting, variation, etc. Verify that the results are improved by the fine-tune (more aligned with Unoform style than before). Collect a few example outputs for internal demo. If all looks good, the GenAI Kitchen application is fully implemented and ready for use!
+* [ ] **Configure Training Parameters:**
+  - **Trigger Word**: Use the defined trigger (e.g., `unoform`)
+  - **Steps**: Start with 1000-2000 steps for initial training
+  - **Learning Rate**: Use default (usually optimal)
+  - **LoRA Rank**: Higher rank (32-64) for style training
+  - **Caption Prefix**: Optional - adds context to all images
+
+* [ ] **Start Training on Replicate:**
+  1. Go to chosen trainer URL
+  2. Upload your ZIP file of Unoform images
+  3. Set trigger word to `unoform`
+  4. Configure training steps (start with 1500)
+  5. Leave other settings at defaults initially
+  6. Click "Start training" and wait (typically 20-40 minutes)
+
+* [ ] **Test the Trained Model:**
+  - Once training completes, test with various prompts:
+    - `unoform kitchen with white cabinets`
+    - `unoform modern kitchen design`
+    - `unoform minimalist Scandinavian kitchen`
+  - Verify style consistency and quality
+  - Check if trigger word properly activates the style
+
+* [ ] **Create Custom Model on Replicate:**
+  1. After training succeeds, click "Create model" on the training page
+  2. Name it appropriately (e.g., `unoform-kitchen-style`)
+  3. Set visibility (private for Unoform use only)
+  4. The model will be available at `your-username/unoform-kitchen-style`
+
+* [ ] **Integrate with GenAI Kitchen:**
+  - Update the model version in `/app/generate/route.ts`
+  - Replace the Flux model ID with your custom model
+  - Update prompt handling to include trigger word
+  - Test generation with the new model
+
+* [ ] **A/B Testing & Optimization:**
+  - Compare outputs with base Flux model
+  - Gather feedback from design team
+  - If needed, retrain with adjusted parameters:
+    - More/fewer training steps
+    - Different images in dataset
+    - Adjusted trigger word strategy
+
+* [ ] **Documentation & Deployment:**
+  - Document the model URL and version
+  - Update application documentation
+  - Create usage guidelines for the trigger word
+  - Deploy updated application with custom model
 
 ## Implementation Notes and Status
 

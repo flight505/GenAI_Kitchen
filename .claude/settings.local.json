@@ -22,7 +22,8 @@
       "Bash(npx tsc:*)",
       "Bash(npx vercel:*)",
       "Bash(grep:*)",
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }

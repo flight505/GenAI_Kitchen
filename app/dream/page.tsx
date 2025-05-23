@@ -118,7 +118,16 @@ export default function DreamPage() {
           const imageName = image.originalFile.originalFileName;
           const imageUrl = UrlBuilder.url({
             accountId: image.accountId,
-            filePath: image.filePath
+            filePath: image.filePath,
+            options: {
+              transformation: "image",
+              transformationParams: {
+                "w": 1344,
+                "h": 768,
+                "f": "jpg",
+                "fit": "scale-down"
+              }
+            }
           });
           setPhotoName(imageName);
           setOriginalPhoto(imageUrl);
@@ -186,10 +195,16 @@ export default function DreamPage() {
       return;
     }
 
-    let newPhoto = await res.json();
-    if (res.status !== 200) {
-      setError(typeof newPhoto === 'string' ? newPhoto : newPhoto.message || 'An error occurred');
-    } else {
+    if (!res.ok) {
+      // For error responses, try to get the error message
+      const errorText = await res.text();
+      setError(errorText || `Error: ${res.status} ${res.statusText}`);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const newPhoto = await res.json();
       const imageUrl = typeof newPhoto === 'string' ? newPhoto : newPhoto[0];
       setRestoredImage(imageUrl);
       // Add generated image to history
@@ -198,6 +213,9 @@ export default function DreamPage() {
         prompt: generatePromptFromSelections(kitchenSelections),
         type: 'generated'
       });
+    } catch (error) {
+      setError('Failed to process the response from the server');
+      console.error('JSON parsing error:', error);
     }
     setTimeout(() => {
       setLoading(false);
@@ -223,10 +241,17 @@ export default function DreamPage() {
       }),
     });
 
-    let newPhoto = await res.json();
-    if (res.status !== 200) {
-      setError(newPhoto);
-    } else {
+    if (!res.ok) {
+      // For error responses, try to get the error message
+      const errorText = await res.text();
+      setError(errorText || `Error: ${res.status} ${res.statusText}`);
+      setInpainting(false);
+      setEditMode(false);
+      return;
+    }
+
+    try {
+      const newPhoto = await res.json();
       const imageUrl = typeof newPhoto === 'string' ? newPhoto : newPhoto[0];
       setRestoredImage(imageUrl);
       // Add inpainted image to history
@@ -235,6 +260,9 @@ export default function DreamPage() {
         prompt: inpaintPrompt,
         type: 'inpainted'
       });
+    } catch (error) {
+      setError('Failed to process the inpainting response');
+      console.error('JSON parsing error:', error);
     }
     setInpainting(false);
     setEditMode(false);
@@ -305,10 +333,16 @@ export default function DreamPage() {
       }),
     });
 
-    let newPhoto = await res.json();
-    if (res.status !== 200) {
-      setError(newPhoto);
-    } else {
+    if (!res.ok) {
+      // For error responses, try to get the error message
+      const errorText = await res.text();
+      setError(errorText || `Error: ${res.status} ${res.statusText}`);
+      setGenerating(false);
+      return;
+    }
+
+    try {
+      const newPhoto = await res.json();
       const imageUrl = typeof newPhoto === 'string' ? newPhoto : newPhoto[0];
       setRestoredImage(imageUrl);
       // Add variation to history
@@ -317,6 +351,9 @@ export default function DreamPage() {
         prompt: generatePromptFromSelections(kitchenSelections),
         type: 'variation'
       });
+    } catch (error) {
+      setError('Failed to process the variation response');
+      console.error('JSON parsing error:', error);
     }
     setGenerating(false);
   }
@@ -640,8 +677,8 @@ export default function DreamPage() {
                     alt="original photo"
                     src={originalPhoto}
                     className="rounded-2xl max-w-3xl w-full"
-                    width={768}
-                    height={432}
+                    width={1344}
+                    height={768}
                     style={{ width: '100%', height: 'auto' }}
                   />
                   <div className="flex justify-center mt-8">

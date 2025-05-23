@@ -17,8 +17,21 @@ interface SavedImage {
 }
 
 async function getUserFromToken(request: Request): Promise<string | null> {
+  // Check Authorization header first
   const authHeader = request.headers.get("authorization");
-  const token = authHeader?.replace("Bearer ", "");
+  const tokenFromHeader = authHeader?.replace("Bearer ", "");
+  
+  // Check cookie as fallback
+  const cookieHeader = request.headers.get("cookie");
+  let tokenFromCookie: string | null = null;
+  
+  if (cookieHeader) {
+    const cookies = cookieHeader.split("; ");
+    const authCookie = cookies.find(c => c.startsWith("auth_token="));
+    tokenFromCookie = authCookie ? authCookie.split("=")[1] : null;
+  }
+  
+  const token = tokenFromHeader || tokenFromCookie;
   
   if (!token) return null;
   

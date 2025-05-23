@@ -42,11 +42,23 @@ export async function POST(request: Request) {
       .setExpirationTime("7d") // Token expires in 7 days
       .sign(JWT_SECRET);
 
-    return NextResponse.json({ 
+    // Create response with token in cookie
+    const response = NextResponse.json({ 
       token,
       username,
       message: "Login successful" 
     });
+
+    // Set HTTP-only cookie for better security
+    response.cookies.set("auth_token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: "/"
+    });
+
+    return response;
 
   } catch (error) {
     console.error("Login error:", error);

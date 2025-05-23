@@ -21,14 +21,16 @@ export default function LoginPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(credentials),
+        credentials: "include" // Important for cookies
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        // Store the token and redirect to main app
+        // Store the token in localStorage for client-side use
         localStorage.setItem("auth_token", data.token);
-        router.push("/dream");
+        // Redirect to main app
+        window.location.href = "/dream"; // Use window.location for full page reload
       } else {
         setError(data.error || "Login failed");
       }

@@ -50,7 +50,7 @@ export default function Header() {
                 {user.username}
               </span>
               <button
-                onClick={logout}
+                onClick={() => logout()}
                 className="text-unoform-gray-medium hover:text-unoform-black transition-colors duration-200 text-sm font-medium"
               >
                 Logout

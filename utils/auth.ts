@@ -97,8 +97,21 @@ export function getCurrentUser(): User | null {
 /**
  * Logout user - remove token and redirect to login
  */
-export function logout(): void {
+export async function logout(): Promise<void> {
+  // Clear local storage
   removeAuthToken();
+  
+  // Clear server-side cookie
+  try {
+    await fetch("/api/auth/logout", {
+      method: "POST",
+      credentials: "include"
+    });
+  } catch (error) {
+    console.error("Logout error:", error);
+  }
+  
+  // Redirect to login
   window.location.href = "/login";
 }
 

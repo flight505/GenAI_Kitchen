@@ -3,7 +3,6 @@
 import { useState } from "react";
 import Image from "next/image";
 import KitchenDropDown from "../KitchenDropDown";
-import Toggle from "../Toggle";
 import { 
   KitchenDesignSelections,
   cabinetStyles,
@@ -76,56 +75,56 @@ export function DesignTab({
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <KitchenDropDown
-                kitchenType="cabinetStyle"
+                label="Cabinet Style"
                 options={cabinetStyles}
                 value={kitchenSelections.cabinetStyle}
-                onChange={(value) => {
+                setValue={(value) => {
                   setKitchenSelections({ ...kitchenSelections, cabinetStyle: value });
                   updatePromptPreview();
                 }}
               />
               <KitchenDropDown
-                kitchenType="cabinetFinish"
+                label="Cabinet Finish"
                 options={cabinetFinishes}
                 value={kitchenSelections.cabinetFinish}
-                onChange={(value) => {
+                setValue={(value) => {
                   setKitchenSelections({ ...kitchenSelections, cabinetFinish: value });
                   updatePromptPreview();
                 }}
               />
               <KitchenDropDown
-                kitchenType="countertop"
+                label="Countertop"
                 options={countertopMaterials}
                 value={kitchenSelections.countertop}
-                onChange={(value) => {
+                setValue={(value) => {
                   setKitchenSelections({ ...kitchenSelections, countertop: value });
                   updatePromptPreview();
                 }}
               />
               <KitchenDropDown
-                kitchenType="flooring"
+                label="Flooring"
                 options={flooringTypes}
                 value={kitchenSelections.flooring}
-                onChange={(value) => {
+                setValue={(value) => {
                   setKitchenSelections({ ...kitchenSelections, flooring: value });
                   updatePromptPreview();
                 }}
               />
               <KitchenDropDown
-                kitchenType="wallColor"
+                label="Wall Color"
                 options={wallColors}
                 value={kitchenSelections.wallColor}
-                onChange={(value) => {
+                setValue={(value) => {
                   setKitchenSelections({ ...kitchenSelections, wallColor: value });
                   updatePromptPreview();
                 }}
                 disabled={showAdvancedControls && advancedSettings.preserveWalls}
               />
               <KitchenDropDown
-                kitchenType="hardware"
+                label="Hardware Finish"
                 options={hardwareFinishes}
                 value={kitchenSelections.hardware}
-                onChange={(value) => {
+                setValue={(value) => {
                   setKitchenSelections({ ...kitchenSelections, hardware: value });
                   updatePromptPreview();
                 }}
@@ -135,11 +134,30 @@ export function DesignTab({
 
           {/* Advanced Controls Toggle */}
           <div className="border-t border-unoform-gray-light pt-4">
-            <Toggle
-              checked={showAdvancedControls}
-              onChange={setShowAdvancedControls}
-              label="Show Advanced Controls"
-            />
+            <div className="flex items-center justify-between">
+              <label htmlFor="advanced-controls" className="text-sm font-medium text-unoform-gray-dark">
+                Show Advanced Controls
+              </label>
+              <button
+                id="advanced-controls"
+                type="button"
+                onClick={() => setShowAdvancedControls(!showAdvancedControls)}
+                className={`
+                  relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200
+                  ${showAdvancedControls ? 'bg-unoform-gold' : 'bg-gray-200'}
+                `}
+                role="switch"
+                aria-checked={showAdvancedControls}
+              >
+                <span className="sr-only">Show advanced controls</span>
+                <span
+                  className={`
+                    inline-block h-4 w-4 transform rounded-full bg-white transition-transform duration-200
+                    ${showAdvancedControls ? 'translate-x-6' : 'translate-x-1'}
+                  `}
+                />
+              </button>
+            </div>
           </div>
 
           {/* Advanced Controls */}

@@ -7,7 +7,7 @@ import Image from "next/image";
 
 interface UploadTabProps {
   originalPhoto: string | null;
-  setOriginalPhoto: (url: string) => void;
+  setOriginalPhoto: (url: string | null) => void;
   setPhotoName: (name: string) => void;
   addToHistory: (image: { url: string; type: string }) => void;
   setToast: (toast: { message: string; type: 'info' | 'success' | 'warning' | 'error' }) => void;
@@ -69,7 +69,7 @@ export function UploadTab({
             onUpdate={({ uploadedFiles }) => {
               if (uploadedFiles.length !== 0) {
                 const image = uploadedFiles[0];
-                const imageName = image.originalFile.originalFileName;
+                const imageName = image.originalFile.originalFileName || "kitchen-photo.jpg";
                 const imageUrl = UrlBuilder.url({
                   accountId: image.accountId,
                   filePath: image.filePath,

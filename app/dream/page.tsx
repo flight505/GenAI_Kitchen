@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { useImageHistory } from "../../hooks/useImageHistory";
 import Footer from "../../components/Footer";
 import Header from "../../components/Header";
-import { WorkflowTabs } from "../../components/WorkflowTabs";
+import WorkflowTabs from "../../components/WorkflowTabs";
 import { UploadTab } from "../../components/tabs/UploadTab";
 import { DesignTab } from "../../components/tabs/DesignTab";
 import { RefineTab } from "../../components/tabs/RefineTab";

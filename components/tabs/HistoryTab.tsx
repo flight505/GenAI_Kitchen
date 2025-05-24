@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Undo2, Redo2, Download } from "lucide-react";
+import { ArrowUturnLeftIcon, ArrowUturnRightIcon, ArrowDownTrayIcon } from "@heroicons/react/24/outline";
 import downloadPhoto from "../../utils/downloadPhoto";
 
 interface HistoryTabProps {
@@ -40,7 +40,7 @@ export function HistoryTab({
               disabled={!canUndo}
               className={`btn-outline flex items-center space-x-2 ${!canUndo ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <Undo2 size={18} />
+              <ArrowUturnLeftIcon className="h-5 w-5" />
               <span>Undo</span>
             </button>
             <button
@@ -48,7 +48,7 @@ export function HistoryTab({
               disabled={!canRedo}
               className={`btn-outline flex items-center space-x-2 ${!canRedo ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-              <Redo2 size={18} />
+              <ArrowUturnRightIcon className="h-5 w-5" />
               <span>Redo</span>
             </button>
           </div>
@@ -73,7 +73,7 @@ export function HistoryTab({
                   onClick={() => downloadPhoto(currentImage.url, `kitchen-design-${Date.now()}.jpg`)}
                   className="btn-default flex items-center space-x-2 bg-white/90 backdrop-blur"
                 >
-                  <Download size={18} />
+                  <ArrowDownTrayIcon className="h-5 w-5" />
                   <span>Download</span>
                 </button>
               </div>

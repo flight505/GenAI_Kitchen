@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import ModernInpaintUI from "../ModernInpaintUI";
 
 interface RefineTabProps {
@@ -63,8 +62,11 @@ export function RefineTab({
 
         <ModernInpaintUI
           imageUrl={restoredImage}
-          onInpaint={inpaintPhoto}
-          isInpainting={inpainting}
+          onMaskGenerated={async (maskUrl, prompt) => {
+            setInpaintPrompt(prompt);
+            await inpaintPhoto(maskUrl);
+          }}
+          isProcessing={inpainting}
         />
       </div>
     </div>

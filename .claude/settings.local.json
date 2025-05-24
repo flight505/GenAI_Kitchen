@@ -28,7 +28,10 @@
       "Bash(env)",
       "WebFetch(domain:21st.dev)",
       "Bash(npm install:*)",
-      "WebFetch(domain:scottspence.com)"
+      "WebFetch(domain:scottspence.com)",
+      "Bash(touch:*)",
+      "Bash(mkdir:*)",
+      "Bash(curl:*)"
     ],
     "deny": []
   }

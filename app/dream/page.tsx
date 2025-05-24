@@ -7,11 +7,14 @@ import { useImageHistory } from "../../hooks/useImageHistory";
 import Footer from "../../components/Footer";
 import Header from "../../components/Header";
 import WorkflowTabs from "../../components/WorkflowTabs";
+import WorkflowContextBar from "../../components/navigation/WorkflowContextBar";
 import { UploadTab } from "../../components/tabs/UploadTab";
 import { DesignTab } from "../../components/tabs/DesignTab";
 import { RefineTab } from "../../components/tabs/RefineTab";
 import { CompareTab } from "../../components/tabs/CompareTab";
 import { HistoryTab } from "../../components/tabs/HistoryTab";
+import { ModelType } from "../../components/models/ModelSelectionTabs";
+import { useWorkflowContext } from "../../hooks/useWorkflowContext";
 import { 
   KitchenDesignSelections,
   generatePromptFromSelections
@@ -141,9 +144,20 @@ function DreamPageContent() {
     getCurrentImage,
     history,
   } = useImageHistory();
+  
+  const {
+    workflowState,
+    updateWorkflowName,
+    setBaseImage,
+    updateCurrentModel,
+    addIteration
+  } = useWorkflowContext();
 
-  async function generatePhoto(fileUrl?: string) {
-    const imageToGenerate = fileUrl || originalPhoto;
+  async function generatePhoto(fileUrl?: string | ModelType) {
+    // Determine if the parameter is a model type or file URL
+    const model = (fileUrl === 'canny-pro' || fileUrl === 'flux-pro') ? fileUrl : undefined;
+    const actualFileUrl = model ? undefined : fileUrl;
+    const imageToGenerate = actualFileUrl || originalPhoto;
     if (!imageToGenerate) {
       setError("Please upload an image first");
       return;
@@ -164,6 +178,7 @@ function DreamPageContent() {
           (showAdvancedControls && advancedSettings.preserveFloor ? ", keep existing floor unchanged" : "") +
           (showAdvancedControls && advancedSettings.preserveCeiling ? ", keep existing ceiling unchanged" : "") +
           (showAdvancedControls && advancedSettings.preserveWindows ? ", keep existing windows unchanged" : ""),
+        ...(model && { model }), // Add model parameter if provided
         ...(showAdvancedControls && {
           guidance: advancedSettings.guidance,
           steps: advancedSettings.steps,
@@ -194,6 +209,11 @@ function DreamPageContent() {
         prompt: generatePromptFromSelections(kitchenSelections),
         type: 'generated'
       });
+      
+      // Update workflow state if this is from a model switch
+      if (model) {
+        updateCurrentModel(model);
+      }
       
       // Auto-switch to compare tab after generation
       const url = new URL(window.location.href);
@@ -243,6 +263,16 @@ function DreamPageContent() {
         url: imageUrl,
         prompt: inpaintPrompt,
         type: 'inpainted'
+      });
+      
+      // Add as iteration to workflow
+      addIteration({
+        id: `iteration-${Date.now()}`,
+        baseImage: restoredImage || originalPhoto || '',
+        maskData: '', // We'd need to pass mask data from the canvas
+        prompt: inpaintPrompt,
+        resultImage: imageUrl,
+        createdAt: new Date().toISOString()
       });
     } catch (error) {
       setError('Failed to process the inpainting response');
@@ -303,8 +333,14 @@ function DreamPageContent() {
     <div className="flex min-h-screen flex-col items-center justify-start bg-white">
       <Header />
       
+      {/* Workflow Context Bar */}
+      <WorkflowContextBar
+        workflowState={workflowState}
+        onNameChange={updateWorkflowName}
+      />
+      
       {/* Workflow Tabs Navigation */}
-      <div className="w-full max-w-6xl mx-auto px-5 mt-8 mb-8">
+      <div className="w-full max-w-6xl mx-auto px-5 mt-8 mb-8" style={{ paddingTop: workflowState ? '60px' : '0' }}>
         <WorkflowTabs />
       </div>
 
@@ -315,7 +351,13 @@ function DreamPageContent() {
           // Common props
           user={user}
           originalPhoto={originalPhoto}
-          setOriginalPhoto={setOriginalPhoto}
+          setOriginalPhoto={(photo: string | null) => {
+            setOriginalPhoto(photo);
+            // Update workflow state when original photo is set
+            if (photo) {
+              setBaseImage({ url: photo, prompt: '', type: 'original' });
+            }
+          }}
           restoredImage={restoredImage}
           setRestoredImage={setRestoredImage}
           loading={loading}
@@ -325,7 +367,13 @@ function DreamPageContent() {
           toast={toast}
           setToast={setToast}
           // Upload tab props
-          addToHistory={addToHistory}
+          addToHistory={(image: any) => {
+            addToHistory(image);
+            // Update workflow state when an image is uploaded
+            if (image.type === 'original' && image.url) {
+              setBaseImage({ url: image.url, prompt: '', type: 'original' });
+            }
+          }}
           // Design tab props
           kitchenSelections={kitchenSelections}
           setKitchenSelections={setKitchenSelections}
@@ -334,6 +382,7 @@ function DreamPageContent() {
           advancedSettings={advancedSettings}
           setAdvancedSettings={setAdvancedSettings}
           generatePhoto={generatePhoto}
+          updateCurrentModel={updateCurrentModel}
           // Refine tab props
           editMode={editMode}
           setEditMode={setEditMode}

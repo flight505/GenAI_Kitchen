@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import KitchenDropDown from "../KitchenDropDown";
+import ModelSelectionTabs, { ModelType } from "../models/ModelSelectionTabs";
 import { 
   KitchenDesignSelections,
   cabinetStyles,
@@ -23,7 +24,7 @@ interface DesignTabProps {
   setShowAdvancedControls: (show: boolean) => void;
   advancedSettings: any;
   setAdvancedSettings: (settings: any) => void;
-  generatePhoto: () => Promise<void>;
+  generatePhoto: (model?: ModelType) => Promise<void>;
   loading: boolean;
   error: string | null;
 }
@@ -42,6 +43,7 @@ export function DesignTab({
   error,
 }: DesignTabProps) {
   const [promptPreview, setPromptPreview] = useState<string>("");
+  const [selectedModel, setSelectedModel] = useState<ModelType>('canny-pro');
 
   // Update prompt preview when selections change
   const updatePromptPreview = () => {
@@ -67,9 +69,16 @@ export function DesignTab({
               Design Your Kitchen
             </h2>
             <p className="text-unoform-gray mb-6">
-              Customize your kitchen design by selecting materials and finishes below.
+              Choose your generation mode and customize materials and finishes below.
             </p>
           </div>
+
+          {/* Model Selection */}
+          <ModelSelectionTabs
+            selectedModel={selectedModel}
+            onModelSelect={setSelectedModel}
+            disabled={loading}
+          />
 
           {/* Design Selections */}
           <div className="space-y-4">
@@ -262,7 +271,7 @@ export function DesignTab({
 
           {/* Generate Button */}
           <button
-            onClick={generatePhoto}
+            onClick={() => generatePhoto(selectedModel)}
             disabled={loading || !originalPhoto}
             className={`w-full btn-default ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >

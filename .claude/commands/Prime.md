@@ -10,7 +10,7 @@ eza . --tree --git-ignore
 
 > list of files:
 ai_docs/guide.md
-ai_docs/guide_2.md
+ai_docs/guide_step2_v2.md
 CLAUDE.md
 
 > Dont do anything else.

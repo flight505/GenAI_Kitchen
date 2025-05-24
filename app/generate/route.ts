@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     //   }
     // }
 
-    const { imageUrl, prompt, guidance, steps, strength } = await request.json();
+    const { imageUrl, prompt, guidance, steps, strength, model = 'canny-pro' } = await request.json();
 
     if (!imageUrl) {
       return new Response("Missing required parameter: imageUrl", { status: 400 });
@@ -63,8 +63,40 @@ export async function POST(request: Request) {
       return new Response("Missing required parameter: prompt", { status: 400 });
     }
 
-    // POST request to Replicate to start the image restoration generation process
-    // Phase 1.1: Using FLUX Canny Pro as default model for better structure preservation
+    // Determine which model to use
+    let modelVersion: string;
+    let modelInput: any;
+    let modelName: string;
+
+    if (model === 'flux-pro') {
+      // FLUX 1.1 Pro - Creative mode with full redesign capability
+      modelVersion = "80a09d66baa990429c2f5ae8a4306bf778a1b3775afd01cc2cc8bdbe9033769c";
+      modelName = 'flux-1.1-pro';
+      modelInput = {
+        prompt: enhancePromptWithUnoformStyle(prompt, 'generation'),
+        aspect_ratio: "16:9", // Kitchen visualization aspect ratio
+        width: 1344,
+        height: 768,
+        safety_tolerance: 2,
+        output_format: "png",
+        ...(guidance && { guidance_scale: guidance }), // FLUX 1.1 Pro uses guidance_scale
+        ...(steps && { num_inference_steps: steps })
+      };
+    } else {
+      // FLUX Canny Pro (default) - maintains exact kitchen layout while changing style
+      modelVersion = "3e03126bd3fbb9349783930f4139eb6c488aef2197c4d3fd2a826b35ccecea3d";
+      modelName = 'flux-canny-pro';
+      modelInput = {
+        prompt: enhancePromptWithUnoformStyle(prompt, 'generation'),
+        control_image: imageUrl, // Canny Pro uses control_image for structure preservation
+        guidance: guidance || 30, // Canny Pro optimal guidance (default: 30)
+        steps: steps || 50, // Canny Pro optimal steps (default: 50)
+        safety_tolerance: 2,
+        output_format: "png" // Changed to png as webp is not supported
+      };
+    }
+
+    // POST request to Replicate to start the image generation process
     let startResponse = await fetch("https://api.replicate.com/v1/predictions", {
       method: "POST",
       headers: {
@@ -72,16 +104,8 @@ export async function POST(request: Request) {
         Authorization: "Token " + process.env.REPLICATE_API_KEY,
       },
       body: JSON.stringify({
-        // FLUX Canny Pro - maintains exact kitchen layout while changing style
-        version: "3e03126bd3fbb9349783930f4139eb6c488aef2197c4d3fd2a826b35ccecea3d",
-        input: {
-          prompt: enhancePromptWithUnoformStyle(prompt, 'generation'),
-          control_image: imageUrl, // Canny Pro uses control_image for structure preservation
-          guidance: guidance || 30, // Canny Pro optimal guidance (default: 30)
-          steps: steps || 50, // Canny Pro optimal steps (default: 50)
-          safety_tolerance: 2,
-          output_format: "png" // Changed to png as webp is not supported
-        },
+        version: modelVersion,
+        input: modelInput
       }),
     });
 
@@ -148,7 +172,7 @@ export async function POST(request: Request) {
         timestamp: Date.now(),
         success: false,
         error: 'Timeout after 30 seconds',
-        modelVersion: '3e03126bd3fbb9349783930f4139eb6c488aef2197c4d3fd2a826b35ccecea3d'
+        modelVersion: modelVersion
       });
       return new Response("Timeout: Image generation took too long", { status: 504 });
     }
@@ -159,8 +183,8 @@ export async function POST(request: Request) {
       userId,
       timestamp: Date.now(),
       success: true,
-      cost: monitor.estimateCost('flux-canny-pro'),
-      modelVersion: 'ec2df9b6ab0f3fd8b4d160013e03104cb87f41b2f087cbe17e9f3ee94f3c7e79'
+      cost: monitor.estimateCost(modelName),
+      modelVersion: modelVersion
     });
 
     return NextResponse.json(restoredImage);

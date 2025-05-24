@@ -23,7 +23,12 @@
       "Bash(npx vercel:*)",
       "Bash(grep:*)",
       "Bash(npm install)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "WebFetch(domain:docs.anthropic.com)",
+      "Bash(env)",
+      "WebFetch(domain:21st.dev)",
+      "Bash(npm install:*)",
+      "WebFetch(domain:scottspence.com)"
     ],
     "deny": []
   }

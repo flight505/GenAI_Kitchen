@@ -64,6 +64,7 @@ export async function POST(request: Request) {
     }
 
     // POST request to Replicate to start the image restoration generation process
+    // Phase 1.1: Using FLUX Canny Pro as default model for better structure preservation
     let startResponse = await fetch("https://api.replicate.com/v1/predictions", {
       method: "POST",
       headers: {
@@ -71,22 +72,15 @@ export async function POST(request: Request) {
         Authorization: "Token " + process.env.REPLICATE_API_KEY,
       },
       body: JSON.stringify({
-        // Using Flux Pro 1.1 for structure-guided generation
-        version: "80a09d66baa990429c2f5ae8a4306bf778a1b3775afd01cc2cc8bdbe9033769c",
+        // FLUX Canny Pro - maintains exact kitchen layout while changing style
+        version: "3e03126bd3fbb9349783930f4139eb6c488aef2197c4d3fd2a826b35ccecea3d",
         input: {
           prompt: enhancePromptWithUnoformStyle(prompt, 'generation'),
-          image_prompt: imageUrl,
-          image_prompt_strength: strength ? (1 - strength) * 0.5 : 0.15, // Lower values preserve original structure better
-          prompt_strength: strength || 0.6, // Controls how much of original image is preserved
-          guidance: guidance || 30,
-          num_inference_steps: steps || 28,
-          width: 1344,
-          height: 768,
-          aspect_ratio: "16:9",
-          prompt_upsampling: true,
+          control_image: imageUrl, // Canny Pro uses control_image for structure preservation
+          guidance: guidance || 30, // Canny Pro optimal guidance (default: 30)
+          steps: steps || 50, // Canny Pro optimal steps (default: 50)
           safety_tolerance: 2,
-          output_format: "webp",
-          output_quality: 90
+          output_format: "png" // Changed to png as webp is not supported
         },
       }),
     });
@@ -154,7 +148,7 @@ export async function POST(request: Request) {
         timestamp: Date.now(),
         success: false,
         error: 'Timeout after 30 seconds',
-        modelVersion: '80a09d66baa990429c2f5ae8a4306bf778a1b3775afd01cc2cc8bdbe9033769c'
+        modelVersion: '3e03126bd3fbb9349783930f4139eb6c488aef2197c4d3fd2a826b35ccecea3d'
       });
       return new Response("Timeout: Image generation took too long", { status: 504 });
     }
@@ -166,7 +160,7 @@ export async function POST(request: Request) {
       timestamp: Date.now(),
       success: true,
       cost: monitor.estimateCost('flux-canny-pro'),
-      modelVersion: '80a09d66baa990429c2f5ae8a4306bf778a1b3775afd01cc2cc8bdbe9033769c'
+      modelVersion: 'ec2df9b6ab0f3fd8b4d160013e03104cb87f41b2f087cbe17e9f3ee94f3c7e79'
     });
 
     return NextResponse.json(restoredImage);

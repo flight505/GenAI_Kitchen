@@ -1,9 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import KitchenDropDown from "../KitchenDropDown";
 import ModelSelectionTabs, { ModelType } from "../models/ModelSelectionTabs";
+import ModelInfoCard from "../models/ModelInfoCard";
+import ModelComparisonTable from "../models/ModelComparisonTable";
+import PromptPreview from "../prompt/PromptPreview";
+import DynamicParameters from "../parameters/DynamicParameters";
+import { InformationCircleIcon } from "@heroicons/react/24/outline";
 import { 
   KitchenDesignSelections,
   cabinetStyles,
@@ -27,6 +32,7 @@ interface DesignTabProps {
   generatePhoto: (model?: ModelType) => Promise<void>;
   loading: boolean;
   error: string | null;
+  updateCurrentModel?: (model: ModelType) => void;
 }
 
 export function DesignTab({
@@ -41,12 +47,15 @@ export function DesignTab({
   generatePhoto,
   loading,
   error,
+  updateCurrentModel,
 }: DesignTabProps) {
   const [promptPreview, setPromptPreview] = useState<string>("");
   const [selectedModel, setSelectedModel] = useState<ModelType>('canny-pro');
+  const [showModelInfo, setShowModelInfo] = useState<ModelType | null>(null);
+  const [showComparison, setShowComparison] = useState(false);
 
   // Update prompt preview when selections change
-  const updatePromptPreview = () => {
+  useEffect(() => {
     const basePrompt = generatePromptFromSelections(kitchenSelections);
     const advancedPrompt = showAdvancedControls ? 
       (advancedSettings.wallType !== "smooth" && !advancedSettings.preserveWalls ? `, ${advancedSettings.wallType} walls` : "") +
@@ -57,7 +66,7 @@ export function DesignTab({
       (advancedSettings.preserveWindows ? ", keep existing windows unchanged" : "")
       : "";
     setPromptPreview(basePrompt + advancedPrompt);
-  };
+  }, [kitchenSelections, showAdvancedControls, advancedSettings]);
 
   return (
     <div className="w-full max-w-6xl mx-auto">
@@ -74,11 +83,45 @@ export function DesignTab({
           </div>
 
           {/* Model Selection */}
-          <ModelSelectionTabs
-            selectedModel={selectedModel}
-            onModelSelect={setSelectedModel}
-            disabled={loading}
-          />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-base font-medium text-unoform-gray-dark">AI Model Selection</h3>
+              <button
+                onClick={() => setShowComparison(!showComparison)}
+                className="text-sm text-unoform-gold hover:text-unoform-gold/80 font-medium flex items-center gap-1"
+              >
+                <InformationCircleIcon className="w-4 h-4" />
+                {showComparison ? 'Hide' : 'Compare'} Models
+              </button>
+            </div>
+            
+            <ModelSelectionTabs
+              selectedModel={selectedModel}
+              onModelSelect={(model) => {
+                setSelectedModel(model);
+                updateCurrentModel?.(model);
+              }}
+              disabled={loading}
+            />
+            
+            {/* Model Info Buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowModelInfo(selectedModel)}
+                className="text-sm text-unoform-gray hover:text-unoform-gold flex items-center gap-1"
+              >
+                <InformationCircleIcon className="w-4 h-4" />
+                Learn more about {selectedModel === 'canny-pro' ? 'FLUX Canny Pro' : 'FLUX 1.1 Pro'}
+              </button>
+            </div>
+            
+            {/* Model Comparison Table */}
+            {showComparison && (
+              <div className="mt-4">
+                <ModelComparisonTable />
+              </div>
+            )}
+          </div>
 
           {/* Design Selections */}
           <div className="space-y-4">
@@ -89,7 +132,6 @@ export function DesignTab({
                 value={kitchenSelections.cabinetStyle}
                 setValue={(value) => {
                   setKitchenSelections({ ...kitchenSelections, cabinetStyle: value });
-                  updatePromptPreview();
                 }}
               />
               <KitchenDropDown
@@ -98,7 +140,6 @@ export function DesignTab({
                 value={kitchenSelections.cabinetFinish}
                 setValue={(value) => {
                   setKitchenSelections({ ...kitchenSelections, cabinetFinish: value });
-                  updatePromptPreview();
                 }}
               />
               <KitchenDropDown
@@ -107,7 +148,6 @@ export function DesignTab({
                 value={kitchenSelections.countertop}
                 setValue={(value) => {
                   setKitchenSelections({ ...kitchenSelections, countertop: value });
-                  updatePromptPreview();
                 }}
               />
               <KitchenDropDown
@@ -116,7 +156,6 @@ export function DesignTab({
                 value={kitchenSelections.flooring}
                 setValue={(value) => {
                   setKitchenSelections({ ...kitchenSelections, flooring: value });
-                  updatePromptPreview();
                 }}
               />
               <KitchenDropDown
@@ -125,7 +164,6 @@ export function DesignTab({
                 value={kitchenSelections.wallColor}
                 setValue={(value) => {
                   setKitchenSelections({ ...kitchenSelections, wallColor: value });
-                  updatePromptPreview();
                 }}
                 disabled={showAdvancedControls && advancedSettings.preserveWalls}
               />
@@ -135,7 +173,6 @@ export function DesignTab({
                 value={kitchenSelections.hardware}
                 setValue={(value) => {
                   setKitchenSelections({ ...kitchenSelections, hardware: value });
-                  updatePromptPreview();
                 }}
               />
             </div>
@@ -169,10 +206,20 @@ export function DesignTab({
             </div>
           </div>
 
-          {/* Advanced Controls */}
+          {/* Dynamic Parameters */}
+          <div className="border-t border-gray-200 pt-4">
+            <DynamicParameters
+              modelType={selectedModel}
+              values={advancedSettings}
+              onChange={setAdvancedSettings}
+              showAdvanced={showAdvancedControls}
+            />
+          </div>
+          
+          {/* Legacy Advanced Controls - Preservation Options */}
           {showAdvancedControls && (
             <div className="space-y-4 p-4 bg-unoform-cream rounded-lg">
-              <h3 className="font-work font-medium text-unoform-gray-dark">Advanced Settings</h3>
+              <h3 className="font-work font-medium text-unoform-gray-dark">Kitchen-Specific Settings</h3>
               
               {/* Preservation Options */}
               <div className="space-y-2">
@@ -184,7 +231,6 @@ export function DesignTab({
                       checked={advancedSettings.preserveWalls}
                       onChange={(e) => {
                         setAdvancedSettings({ ...advancedSettings, preserveWalls: e.target.checked });
-                        updatePromptPreview();
                       }}
                       className="rounded border-unoform-gray-dark"
                     />
@@ -196,7 +242,6 @@ export function DesignTab({
                       checked={advancedSettings.preserveFloor}
                       onChange={(e) => {
                         setAdvancedSettings({ ...advancedSettings, preserveFloor: e.target.checked });
-                        updatePromptPreview();
                       }}
                       className="rounded border-unoform-gray-dark"
                     />
@@ -208,7 +253,6 @@ export function DesignTab({
                       checked={advancedSettings.preserveCeiling}
                       onChange={(e) => {
                         setAdvancedSettings({ ...advancedSettings, preserveCeiling: e.target.checked });
-                        updatePromptPreview();
                       }}
                       className="rounded border-unoform-gray-dark"
                     />
@@ -220,7 +264,6 @@ export function DesignTab({
                       checked={advancedSettings.preserveWindows}
                       onChange={(e) => {
                         setAdvancedSettings({ ...advancedSettings, preserveWindows: e.target.checked });
-                        updatePromptPreview();
                       }}
                       className="rounded border-unoform-gray-dark"
                     />
@@ -229,44 +272,17 @@ export function DesignTab({
                 </div>
               </div>
 
-              {/* Generation Parameters */}
-              <div className="space-y-3">
-                <div>
-                  <label className="text-sm font-medium text-unoform-gray">
-                    Guidance Scale: {advancedSettings.guidance}
-                  </label>
-                  <input
-                    type="range"
-                    min="1"
-                    max="30"
-                    value={advancedSettings.guidance}
-                    onChange={(e) => setAdvancedSettings({ ...advancedSettings, guidance: parseInt(e.target.value) })}
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-unoform-gray">
-                    Inference Steps: {advancedSettings.steps}
-                  </label>
-                  <input
-                    type="range"
-                    min="10"
-                    max="50"
-                    value={advancedSettings.steps}
-                    onChange={(e) => setAdvancedSettings({ ...advancedSettings, steps: parseInt(e.target.value) })}
-                    className="w-full"
-                  />
-                </div>
-              </div>
+              {/* Note: Main parameters are now in DynamicParameters component above */}
             </div>
           )}
 
           {/* Prompt Preview */}
           {promptPreview && (
-            <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
-              <h4 className="text-sm font-medium text-unoform-gray mb-2">Prompt Preview:</h4>
-              <p className="text-sm text-gray-600 italic">{promptPreview}</p>
-            </div>
+            <PromptPreview
+              prompt={promptPreview}
+              onPromptChange={setPromptPreview}
+              className="mb-4"
+            />
           )}
 
           {/* Generate Button */}
@@ -310,6 +326,18 @@ export function DesignTab({
           </div>
         </div>
       </div>
+      
+      {/* Model Info Modal */}
+      {showModelInfo && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <ModelInfoCard
+              modelType={showModelInfo}
+              onClose={() => setShowModelInfo(null)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

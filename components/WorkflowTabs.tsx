@@ -135,11 +135,11 @@ export default function WorkflowTabs() {
                   }
                 `}
               >
-                {/* Active Indicator */}
+                {/* Active Indicator - Rounded Left Edge */}
                 {isActive && (
                   <motion.div
                     layoutId="activeTab"
-                    className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-unoform-gold rounded-r-full"
+                    className="absolute -left-0.5 -top-0.0 w-1 h-9 bg-unoform-gold rounded-l-full"
                     transition={{ type: 'spring', stiffness: 500, damping: 30 }}
                   />
                 )}

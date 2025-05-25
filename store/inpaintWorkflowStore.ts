@@ -116,9 +116,9 @@ export const useInpaintWorkflowStore = create<InpaintWorkflowStore>()(
             state.currentIterationId = id;
             
             // Auto-create branch if exceeding linear iterations
-            if (iteration.parentId && state.iterations.filter(i => i.parentId === iteration.parentId).length > 1) {
-              const parentIteration = state.iterations.find(i => i.id === iteration.parentId);
-              if (parentIteration && !state.branches.some(b => b.iterations.includes(id))) {
+            if (iteration.parentId && state.iterations.filter((i: InpaintIteration) => i.parentId === iteration.parentId).length > 1) {
+              const parentIteration = state.iterations.find((i: InpaintIteration) => i.id === iteration.parentId);
+              if (parentIteration && !state.branches.some((b: InpaintBranch) => b.iterations.includes(id))) {
                 const branch: InpaintBranch = {
                   id: `branch-${Date.now()}`,
                   name: `Branch from ${parentIteration.metadata.region || 'iteration'}`,
@@ -136,7 +136,7 @@ export const useInpaintWorkflowStore = create<InpaintWorkflowStore>()(
         
         updateIteration: (id, updates) => {
           set((state) => {
-            const iteration = state.iterations.find(i => i.id === id);
+            const iteration = state.iterations.find((i: InpaintIteration) => i.id === id);
             if (iteration) {
               Object.assign(iteration, updates);
             }
@@ -151,7 +151,7 @@ export const useInpaintWorkflowStore = create<InpaintWorkflowStore>()(
         
         acceptIteration: (id) => {
           set((state) => {
-            const iteration = state.iterations.find(i => i.id === id);
+            const iteration = state.iterations.find((i: InpaintIteration) => i.id === id);
             if (iteration) {
               iteration.status = 'completed';
               iteration.rating = 5;
@@ -161,7 +161,7 @@ export const useInpaintWorkflowStore = create<InpaintWorkflowStore>()(
         
         rejectIteration: (id) => {
           set((state) => {
-            const iteration = state.iterations.find(i => i.id === id);
+            const iteration = state.iterations.find((i: InpaintIteration) => i.id === id);
             if (iteration) {
               iteration.status = 'failed';
               iteration.rating = 1;
@@ -203,20 +203,20 @@ export const useInpaintWorkflowStore = create<InpaintWorkflowStore>()(
             // Implement merge strategy
             if (strategy === 'latest') {
               // Keep the most recent iteration from all branches
-              const allIterations = branches.flatMap(b => b.iterations);
+              const allIterations = branches.flatMap((b: InpaintBranch) => b.iterations);
               const latestIteration = state.iterations
-                .filter(i => allIterations.includes(i.id))
-                .sort((a, b) => b.timestamp - a.timestamp)[0];
+                .filter((i: InpaintIteration) => allIterations.includes(i.id))
+                .sort((a: InpaintIteration, b: InpaintIteration) => b.timestamp - a.timestamp)[0];
               
               if (latestIteration) {
                 state.currentIterationId = latestIteration.id;
               }
             } else if (strategy === 'best') {
               // Keep the highest rated iteration
-              const allIterations = branches.flatMap(b => b.iterations);
+              const allIterations = branches.flatMap((b: InpaintBranch) => b.iterations);
               const bestIteration = state.iterations
-                .filter(i => allIterations.includes(i.id) && i.rating)
-                .sort((a, b) => (b.rating || 0) - (a.rating || 0))[0];
+                .filter((i: InpaintIteration) => allIterations.includes(i.id) && i.rating)
+                .sort((a: InpaintIteration, b: InpaintIteration) => (b.rating || 0) - (a.rating || 0))[0];
               
               if (bestIteration) {
                 state.currentIterationId = bestIteration.id;
@@ -225,7 +225,7 @@ export const useInpaintWorkflowStore = create<InpaintWorkflowStore>()(
             
             // Remove merged branches except the first one
             const [keepBranch, ...removeBranches] = branches;
-            state.branches = state.branches.filter(b => !removeBranches.map(rb => rb.id).includes(b.id));
+            state.branches = state.branches.filter((b: InpaintBranch) => !removeBranches.map((rb: InpaintBranch) => rb.id).includes(b.id));
           });
         },
         
@@ -243,7 +243,7 @@ export const useInpaintWorkflowStore = create<InpaintWorkflowStore>()(
         
         deleteComparison: (comparisonId) => {
           set((state) => {
-            state.comparisons = state.comparisons.filter(c => c.id !== comparisonId);
+            state.comparisons = state.comparisons.filter((c: InpaintComparison) => c.id !== comparisonId);
           });
         },
         

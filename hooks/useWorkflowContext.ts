@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { WorkflowState, WorkflowImage, InpaintIteration } from '../types/workflow';
+import { WorkflowState, WorkflowImage, InpaintIteration, WorkflowBranch } from '../types/workflow';
 import { ModelType } from '../types/models';
 import { saveWorkflow, loadWorkflow, clearWorkflow } from '../utils/localStorage';
 
@@ -98,11 +98,12 @@ export function useWorkflowContext(): UseWorkflowContextReturn {
   const addBranch = useCallback((branchName: string, fromIterationId?: string) => {
     setWorkflowState(prev => {
       if (!prev) return null;
-      const branch = {
+      const branch: WorkflowBranch = {
         id: `branch-${Date.now()}`,
         name: branchName,
         fromIterationId,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        images: []
       };
       return {
         ...prev,

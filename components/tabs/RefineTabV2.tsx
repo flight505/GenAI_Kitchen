@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { useInpaintWorkflowStore } from '@/store/inpaintWorkflowStore';
-import InpaintingLayout from '@/components/inpaint/InpaintingLayout';
-import InpaintStepper from '@/components/inpaint/InpaintStepper';
+import { useInpaintWorkflowStore } from '../../store/inpaintWorkflowStore';
+import InpaintingLayout from '../inpaint/InpaintingLayout';
+import InpaintStepper from '../inpaint/InpaintStepper';
 import ModernInpaintUI from '../ModernInpaintUI';
-import CompareSlider from '../CompareSlider';
+import { CompareSlider } from '../CompareSlider';
 import { PhotoIcon, SparklesIcon } from '@heroicons/react/24/outline';
-import type { InpaintIteration } from '@/types/inpainting';
+import type { InpaintIteration } from '../../types/inpainting';
 
 interface RefineTabV2Props {
   restoredImage: string | null;
@@ -163,12 +163,6 @@ export function RefineTabV2({
         imageUrl={currentIteration?.imageUrl || baseImage}
         onMaskGenerated={handleInpaint}
         isProcessing={inpainting}
-        maskSettings={{
-          brushSize: maskSettings.brushSize,
-          brushOpacity: maskSettings.brushOpacity,
-          eraseMode: maskSettings.eraseMode
-        }}
-        onSettingsChange={updateMaskSettings}
       />
     </div>
   );

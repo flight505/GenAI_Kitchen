@@ -335,7 +335,7 @@ function DreamPageContent() {
       
       {/* Workflow Context Bar */}
       <WorkflowContextBar
-        workflowState={workflowState}
+        workflowState={workflowState || undefined}
         onNameChange={updateWorkflowName}
       />
       

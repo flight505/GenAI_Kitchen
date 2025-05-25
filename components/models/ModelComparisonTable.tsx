@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { CheckIcon, XMarkIcon, MinusIcon } from '@heroicons/react/24/outline';
-import { ModelType } from '@/types/models';
+import { ModelType } from '../../types/models';
 
 interface ComparisonRow {
   feature: string;

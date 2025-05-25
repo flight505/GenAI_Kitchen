@@ -2,14 +2,27 @@
  * Workflow-related type definitions for GenAI Kitchen
  */
 
+import { ModelType } from './models';
+
 export type WorkflowStep = 'upload' | 'design' | 'refine' | 'compare' | 'history';
 
 export interface WorkflowState {
-  currentStep: WorkflowStep;
-  completedSteps: WorkflowStep[];
-  workflowId: string;
-  startedAt: number;
-  lastModified: number;
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  baseImage: string | null;
+  currentModel?: ModelType;
+  iterations: InpaintIteration[];
+  branches: WorkflowBranch[];
+  checkpoints: WorkflowCheckpoint[];
+  metadata: Record<string, any>;
+  // Legacy fields - can be removed later
+  currentStep?: WorkflowStep;
+  completedSteps?: WorkflowStep[];
+  workflowId?: string;
+  startedAt?: number;
+  lastModified?: number;
 }
 
 export interface WorkflowImage {
@@ -24,14 +37,19 @@ export interface WorkflowImage {
 
 export interface InpaintIteration {
   id: string;
-  beforeImage: string;
-  afterImage?: string;
-  mask: string;
+  baseImage: string;
+  maskData: string;
   prompt: string;
-  area: string; // User-friendly name like "Cabinets"
-  timestamp: number;
-  isGenerating: boolean;
-  status: 'pending' | 'success' | 'error';
+  resultImage: string;
+  createdAt: string;
+  // Legacy fields
+  beforeImage?: string;
+  afterImage?: string;
+  mask?: string;
+  area?: string;
+  timestamp?: number;
+  isGenerating?: boolean;
+  status?: 'pending' | 'success' | 'error';
 }
 
 export interface InpaintingWorkflowState {
@@ -47,7 +65,8 @@ export interface WorkflowBranch {
   parentId?: string;
   name: string;
   images: WorkflowImage[];
-  createdAt: number;
+  createdAt: string;
+  fromIterationId?: string;
 }
 
 export interface WorkflowHistory {
@@ -58,11 +77,13 @@ export interface WorkflowHistory {
 
 export interface WorkflowCheckpoint {
   id: string;
-  branchId: string;
-  imageId: string;
   name: string;
+  workflowSnapshot: string;
+  createdAt: string;
+  // Legacy fields
+  branchId?: string;
+  imageId?: string;
   description?: string;
-  createdAt: number;
 }
 
 export interface WorkflowAnalytics {

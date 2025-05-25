@@ -1,5 +1,5 @@
 import { StateCreator, StoreApi } from 'zustand';
-import { useHistoryStore } from '@/store/historyStore';
+import { useHistoryStore } from '../historyStore';
 
 export interface UndoableOptions {
   // Limit number of history entries

@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
-import { WorkflowState, WorkflowImage, InpaintIteration } from '@/types/workflow';
-import { ModelType } from '@/types/models';
-import { saveWorkflow, loadWorkflow, clearWorkflow } from '@/utils/localStorage';
+import { WorkflowState, WorkflowImage, InpaintIteration } from '../types/workflow';
+import { ModelType } from '../types/models';
+import { saveWorkflow, loadWorkflow, clearWorkflow } from '../utils/localStorage';
 
 interface UseWorkflowContextReturn {
   workflowState: WorkflowState | null;

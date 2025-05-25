@@ -13,7 +13,7 @@ import {
   InformationCircleIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
-import { ModelType } from '@/types/models';
+import { ModelType } from '../../types/models';
 
 interface ModelInfo {
   id: ModelType;
@@ -39,7 +39,7 @@ interface ModelInfo {
   }[];
 }
 
-const modelInfoData: Record<ModelType, ModelInfo> = {
+const modelInfoData: Record<string, ModelInfo> = {
   'canny-pro': {
     id: 'canny-pro',
     name: 'FLUX Canny Pro',

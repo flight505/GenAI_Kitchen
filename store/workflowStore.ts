@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { devtools, persist } from 'zustand/middleware';
 import { immer } from 'zustand/middleware/immer';
-import { WorkflowState, WorkflowImage, InpaintIteration } from '@/types/workflow';
-import { ModelType } from '@/types/models';
+import { WorkflowState, WorkflowImage, InpaintIteration } from '../types/workflow';
+import { ModelType } from '../types/models';
 
 interface WorkflowStore {
   // State

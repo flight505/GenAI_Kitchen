@@ -8,7 +8,7 @@ import {
   LockClosedIcon,
   LockOpenIcon
 } from '@heroicons/react/24/outline';
-import { ModelType } from '@/types/models';
+import { ModelType } from '../../types/models';
 import ParameterTooltip from './ParameterTooltip';
 
 interface ParameterSchema {
@@ -36,7 +36,7 @@ interface ParameterPreset {
   values: Record<string, any>;
 }
 
-const modelParameters: Record<ModelType, ParameterSchema[]> = {
+const modelParameters: Record<string, ParameterSchema[]> = {
   'canny-pro': [
     {
       name: 'Guidance Scale',

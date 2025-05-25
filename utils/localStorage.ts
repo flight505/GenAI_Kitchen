@@ -78,6 +78,19 @@ export const loadWorkflowState = (): WorkflowState | null => {
   return storage.get<WorkflowState>(WORKFLOW_STORAGE_KEY);
 };
 
+// Add aliases for different naming conventions
+export const saveWorkflow = (key: string, workflow: WorkflowState): boolean => {
+  return storage.set(`workflow_${key}`, workflow);
+};
+
+export const loadWorkflow = (key: string): WorkflowState | null => {
+  return storage.get<WorkflowState>(`workflow_${key}`);
+};
+
+export const clearWorkflow = (key: string): boolean => {
+  return storage.remove(`workflow_${key}`);
+};
+
 export const clearWorkflowState = (): boolean => {
   return storage.remove(WORKFLOW_STORAGE_KEY);
 };

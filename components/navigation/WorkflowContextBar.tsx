@@ -13,8 +13,8 @@ import {
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
 import { ShieldCheckIcon } from '@heroicons/react/24/solid';
-import { WorkflowState } from '@/types/workflow';
-import { ModelType } from '@/types/models';
+import { WorkflowState } from '../../types/workflow';
+import { ModelType } from '../../types/models';
 
 interface WorkflowContextBarProps {
   workflowState?: WorkflowState;

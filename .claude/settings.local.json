@@ -31,7 +31,8 @@
       "WebFetch(domain:scottspence.com)",
       "Bash(touch:*)",
       "Bash(mkdir:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(claude tools)"
     ],
     "deny": []
   }

@@ -1,5 +1,5 @@
 import { StateCreator } from 'zustand';
-import { parseUrlState, updateUrlState } from '@/utils/urlState';
+import { parseURLState, updateURLState } from '../../utils/urlState';
 
 export interface UrlSyncConfig {
   // Keys to sync with URL
@@ -18,7 +18,7 @@ export const urlSync = <T extends object>(
   
   // Initialize from URL on load
   if (typeof window !== 'undefined') {
-    const urlState = parseUrlState();
+    const urlState = parseURLState();
     const initialState: Partial<T> = {};
     
     config.keys.forEach(key => {
@@ -57,7 +57,7 @@ export const urlSync = <T extends object>(
       });
       
       if (Object.keys(updates).length > 0) {
-        updateUrlState(updates);
+        updateURLState(updates);
       }
     }, config.debounce || 500);
   });

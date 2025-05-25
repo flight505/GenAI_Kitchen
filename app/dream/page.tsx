@@ -44,7 +44,6 @@ function TabContent({
           <UploadTab
             originalPhoto={props.originalPhoto}
             setOriginalPhoto={props.setOriginalPhoto}
-            setPhotoName={props.setPhotoName}
             addToHistory={props.addToHistory}
             setToast={props.setToast}
           />
@@ -108,7 +107,6 @@ function DreamPageContent() {
   const [loading, setLoading] = useState<boolean>(false);
   const [sideBySide, setSideBySide] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [photoName, setPhotoName] = useState<string | null>(null);
   const [kitchenSelections, setKitchenSelections] = useState<KitchenDesignSelections>({
     cabinetStyle: "Modern Flat-Panel",
     cabinetFinish: "Matte White",
@@ -355,7 +353,13 @@ function DreamPageContent() {
             setOriginalPhoto(photo);
             // Update workflow state when original photo is set
             if (photo) {
-              setBaseImage({ url: photo, prompt: '', type: 'original' });
+              setBaseImage({ 
+                id: `img-${Date.now()}`,
+                url: photo, 
+                prompt: '', 
+                type: 'original',
+                timestamp: Date.now()
+              });
             }
           }}
           restoredImage={restoredImage}
@@ -363,7 +367,6 @@ function DreamPageContent() {
           loading={loading}
           error={error}
           setError={setError}
-          setPhotoName={setPhotoName}
           toast={toast}
           setToast={setToast}
           // Upload tab props
@@ -371,7 +374,13 @@ function DreamPageContent() {
             addToHistory(image);
             // Update workflow state when an image is uploaded
             if (image.type === 'original' && image.url) {
-              setBaseImage({ url: image.url, prompt: '', type: 'original' });
+              setBaseImage({ 
+                id: `img-${Date.now()}`,
+                url: image.url, 
+                prompt: '', 
+                type: 'original',
+                timestamp: Date.now()
+              });
             }
           }}
           // Design tab props

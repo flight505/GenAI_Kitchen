@@ -13,7 +13,8 @@ import {
   PlayIcon,
   AcademicCapIcon,
   DocumentTextIcon,
-  QuestionMarkCircleIcon
+  QuestionMarkCircleIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline';
 import { CheckCircleIcon as CheckCircleSolidIcon } from '@heroicons/react/24/solid';
 

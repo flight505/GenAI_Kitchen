@@ -16,7 +16,7 @@ import {
   CursorArrowRippleIcon,
   SwatchIcon
 } from '@heroicons/react/24/outline';
-import type { MaskToolSettings } from '@/types/inpainting';
+import type { MaskToolSettings } from '../types/inpainting';
 
 interface MaskDrawingCanvasV2Props {
   imageUrl: string;

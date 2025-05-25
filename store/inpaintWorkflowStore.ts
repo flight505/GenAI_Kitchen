@@ -9,7 +9,7 @@ import type {
   MaskToolSettings,
   InpaintingMode,
   IterationMetrics
-} from '@/types/inpainting';
+} from '../types/inpainting';
 
 interface InpaintWorkflowStore extends InpaintingWorkflowState {
   // Mode and session

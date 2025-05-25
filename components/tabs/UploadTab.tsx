@@ -8,7 +8,7 @@ import Image from "next/image";
 interface UploadTabProps {
   originalPhoto: string | null;
   setOriginalPhoto: (url: string | null) => void;
-  setPhotoName: (name: string) => void;
+  setPhotoName?: (name: string) => void;
   addToHistory: (image: { url: string; type: string }) => void;
   setToast: (toast: { message: string; type: 'info' | 'success' | 'warning' | 'error' }) => void;
 }
@@ -83,7 +83,7 @@ export function UploadTab({
                     }
                   }
                 });
-                setPhotoName(imageName);
+                setPhotoName?.(imageName);
                 setOriginalPhoto(imageUrl);
                 // Add original photo to history
                 addToHistory({

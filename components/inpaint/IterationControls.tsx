@@ -18,7 +18,7 @@ import {
   LightBulbIcon
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarSolidIcon } from '@heroicons/react/24/solid';
-import type { InpaintIteration, IterationMetrics } from '@/types/inpainting';
+import type { InpaintIteration, IterationMetrics } from '../../types/inpainting';
 
 interface IterationControlsProps {
   iteration: InpaintIteration;

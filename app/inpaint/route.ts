@@ -19,6 +19,8 @@ export async function POST(request: Request) {
   const monitor = APIMonitor.getInstance();
   let userId: string | undefined;
   
+  console.log('Inpaint route called, API key status:', process.env.REPLICATE_API_KEY ? 'Present' : 'Missing');
+  
   try {
     // Try to get user ID from auth token if present
     const authHeader = request.headers.get("authorization");
@@ -52,12 +54,34 @@ export async function POST(request: Request) {
     //   }
     // }
 
-    const { imageUrl, maskImage, prompt } = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch (jsonError) {
+      console.error('Failed to parse request body:', jsonError);
+      return new Response("Invalid JSON in request body", { status: 400 });
+    }
+    
+    console.log('Inpaint request received:', {
+      hasImageUrl: !!body.imageUrl,
+      hasMaskImage: !!body.maskImage,
+      maskImageLength: body.maskImage?.length,
+      prompt: body.prompt
+    });
+    
+    const { imageUrl, maskImage, prompt } = body;
 
     if (!imageUrl || !maskImage || !prompt) {
+      console.error('Missing parameters:', { imageUrl: !!imageUrl, maskImage: !!maskImage, prompt: !!prompt });
       return new Response("Missing required parameters", { status: 400 });
     }
 
+    console.log('Starting Replicate inpainting with:', {
+      prompt: enhancePromptWithUnoformStyle(prompt, 'inpainting'),
+      hasImage: !!imageUrl,
+      hasMask: !!maskImage
+    });
+    
     // POST request to Replicate to start the inpainting process using Flux Fill Pro
     let startResponse = await fetch("https://api.replicate.com/v1/predictions", {
       method: "POST",
@@ -67,24 +91,35 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         // Using Flux Fill Pro for inpainting
-        version: "10b45d01bb46cffc8d7893b36d720e369d732bb2e48ca3db469a18929eff359d",
+        version: "4fde0da7a29a4c5fa35f1ab3612ea23bf470e275f797e5018b4753e9e0090e29",
         input: {
           prompt: enhancePromptWithUnoformStyle(prompt, 'inpainting'),
           image: imageUrl,
           mask: maskImage,
           steps: 50,
-          guidance: 60,
-          prompt_upsampling: true,
+          guidance: 3,
+          seed: Math.floor(Math.random() * 1000000),
+          output_format: "jpg",
           safety_tolerance: 2,
-          output_format: "png"
+          prompt_upsampling: false
         },
       }),
     });
 
     if (!startResponse.ok) {
-      const errorData = await startResponse.json();
-      console.error("Replicate API error:", errorData);
-      return new Response(`Replicate API error: ${errorData.detail || 'Unknown error'}`, {
+      let errorData;
+      try {
+        errorData = await startResponse.json();
+      } catch (e) {
+        errorData = { detail: 'Failed to parse error response' };
+      }
+      console.error("Replicate API error:", {
+        status: startResponse.status,
+        statusText: startResponse.statusText,
+        error: errorData,
+        apiKey: process.env.REPLICATE_API_KEY ? 'Set' : 'Missing'
+      });
+      return new Response(`Replicate API error: ${errorData.detail || startResponse.statusText || 'Unknown error'}`, {
         status: startResponse.status
       });
     }
@@ -138,39 +173,51 @@ export async function POST(request: Request) {
 
     if (!inpaintedImage) {
       // Track timeout
-      await monitor.trackUsage({
-        endpoint: 'inpaint',
-        userId,
-        timestamp: Date.now(),
-        success: false,
-        error: 'Timeout after 30 seconds',
-        modelVersion: '10b45d01bb46cffc8d7893b36d720e369d732bb2e48ca3db469a18929eff359d'
-      });
+      try {
+        await monitor.trackUsage({
+          endpoint: 'inpaint',
+          userId,
+          timestamp: Date.now(),
+          success: false,
+          error: 'Timeout after 30 seconds',
+          modelVersion: '10b45d01bb46cffc8d7893b36d720e369d732bb2e48ca3db469a18929eff359d'
+        });
+      } catch (monitorError) {
+        console.error('Failed to track timeout:', monitorError);
+      }
       return new Response("Timeout: Inpainting took too long", { status: 504 });
     }
 
     // Track successful inpainting
-    await monitor.trackUsage({
-      endpoint: 'inpaint',
-      userId,
-      timestamp: Date.now(),
-      success: true,
-      cost: monitor.estimateCost('flux-fill-pro'),
-      modelVersion: '10b45d01bb46cffc8d7893b36d720e369d732bb2e48ca3db469a18929eff359d'
-    });
+    try {
+      await monitor.trackUsage({
+        endpoint: 'inpaint',
+        userId,
+        timestamp: Date.now(),
+        success: true,
+        cost: monitor.estimateCost('flux-fill-pro'),
+        modelVersion: '10b45d01bb46cffc8d7893b36d720e369d732bb2e48ca3db469a18929eff359d'
+      });
+    } catch (monitorError) {
+      console.error('Failed to track usage:', monitorError);
+    }
 
     return NextResponse.json(inpaintedImage);
   } catch (error) {
     console.error("Unexpected error:", error);
     
     // Track error
-    await monitor.trackUsage({
-      endpoint: 'inpaint',
-      userId,
-      timestamp: Date.now(),
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    });
+    try {
+      await monitor.trackUsage({
+        endpoint: 'inpaint',
+        userId,
+        timestamp: Date.now(),
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    } catch (monitorError) {
+      console.error('Failed to track error:', monitorError);
+    }
     
     return new Response(`Server error: ${error instanceof Error ? error.message : 'Unknown error'}`, {
       status: 500

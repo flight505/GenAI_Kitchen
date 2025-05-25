@@ -91,8 +91,11 @@ export default function ModernInpaintUI({
             <MaskDrawingCanvas
               imageUrl={imageUrl}
               onMaskGenerated={(maskUrl) => {
+                console.log('Mask generated, prompt:', prompt);
                 if (prompt.trim()) {
                   onMaskGenerated(maskUrl, prompt);
+                } else {
+                  alert('Please enter a description of what you want to change');
                 }
               }}
               width={1344}

@@ -226,24 +226,43 @@ function DreamPageContent() {
     }, 1300);
   }
 
-  async function inpaintPhoto(maskDataUrl: string) {
-    if (!restoredImage || !inpaintPrompt) {
+  async function inpaintPhoto(maskDataUrl: string, promptText?: string) {
+    // Use the passed prompt or fall back to state
+    const promptToUse = promptText || inpaintPrompt;
+    
+    if (!restoredImage || !promptToUse) {
       setError("Please provide a prompt for inpainting");
       return;
     }
 
     setInpainting(true);
-    const res = await fetch("/inpaint", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        imageUrl: restoredImage,
-        maskImage: maskDataUrl,
-        prompt: inpaintPrompt,
-      }),
+    
+    // Debug logging
+    console.log('Inpaint request:', {
+      imageUrl: restoredImage,
+      maskImage: maskDataUrl?.substring(0, 50) + '...', // Log first 50 chars
+      prompt: promptToUse,
     });
+    
+    let res;
+    try {
+      res = await fetch("/inpaint", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          imageUrl: restoredImage,
+          maskImage: maskDataUrl,
+          prompt: promptToUse,
+        }),
+      });
+    } catch (fetchError) {
+      console.error('Fetch error:', fetchError);
+      setError('Failed to connect to the server. Please make sure the server is running.');
+      setInpainting(false);
+      return;
+    }
 
     if (!res.ok) {
       const errorText = await res.text();
@@ -259,7 +278,7 @@ function DreamPageContent() {
       setRestoredImage(imageUrl);
       addToHistory({
         url: imageUrl,
-        prompt: inpaintPrompt,
+        prompt: promptToUse,
         type: 'inpainted'
       });
       
@@ -268,7 +287,7 @@ function DreamPageContent() {
         id: `iteration-${Date.now()}`,
         baseImage: restoredImage || originalPhoto || '',
         maskData: '', // We'd need to pass mask data from the canvas
-        prompt: inpaintPrompt,
+        prompt: promptToUse,
         resultImage: imageUrl,
         createdAt: new Date().toISOString()
       });

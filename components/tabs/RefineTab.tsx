@@ -9,7 +9,7 @@ interface RefineTabProps {
   inpaintPrompt: string;
   setInpaintPrompt: (prompt: string) => void;
   inpainting: boolean;
-  inpaintPhoto: (maskDataUrl: string) => Promise<void>;
+  inpaintPhoto: (maskDataUrl: string, promptText?: string) => Promise<void>;
 }
 
 export function RefineTab({
@@ -63,8 +63,10 @@ export function RefineTab({
         <ModernInpaintUI
           imageUrl={restoredImage}
           onMaskGenerated={async (maskUrl, prompt) => {
+            // Set the prompt first, then call inpaintPhoto with both maskUrl and prompt
             setInpaintPrompt(prompt);
-            await inpaintPhoto(maskUrl);
+            // Need to pass the prompt directly since state might not update immediately
+            await inpaintPhoto(maskUrl, prompt);
           }}
           isProcessing={inpainting}
         />

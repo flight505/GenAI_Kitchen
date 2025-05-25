@@ -32,7 +32,14 @@
       "Bash(touch:*)",
       "Bash(mkdir:*)",
       "Bash(curl:*)",
-      "Bash(claude tools)"
+      "Bash(claude tools)",
+      "Bash(claude mcp:*)",
+      "mcp__playwright-consolelogs-mcp__open_browser",
+      "mcp__playwright__open_browser",
+      "mcp__playwright__get_console_logs",
+      "mcp__playwright__get_network_requests",
+      "mcp__playwright__close_browser",
+      "Bash(rg:*)"
     ],
     "deny": []
   }

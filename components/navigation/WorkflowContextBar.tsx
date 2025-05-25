@@ -112,6 +112,7 @@ export default function WorkflowContextBar({
                   src={workflowState.baseImage}
                   alt="Workflow base"
                   fill
+                  sizes="48px"
                   className="object-cover"
                 />
               ) : (

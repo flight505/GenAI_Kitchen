@@ -35,7 +35,7 @@ export const undoable = <T extends object>(
       const prevState = get();
       
       // Apply the state change
-      set(partial, replace);
+      (set as any)(partial, replace);
       
       // Capture state after change
       const newState = get();
@@ -88,14 +88,14 @@ export const undoable = <T extends object>(
     undo: () => {
       if (currentIndex > 0) {
         currentIndex--;
-        set(history[currentIndex] as T);
+        (set as any)(history[currentIndex] as T);
       }
     },
     
     redo: () => {
       if (currentIndex < history.length - 1) {
         currentIndex++;
-        set(history[currentIndex] as T);
+        (set as any)(history[currentIndex] as T);
       }
     },
     

@@ -110,13 +110,13 @@ export const appendToHistory = (image: WorkflowImage): boolean => {
       id: 'main',
       name: 'Main',
       images: [],
-      createdAt: Date.now()
+      createdAt: new Date().toISOString()
     }],
     currentBranchId: 'main',
     checkpoints: []
   };
   
-  const currentBranch = history.branches.find(b => b.id === history.currentBranchId);
+  const currentBranch = (history.branches as any[]).find((b: any) => b.id === history.currentBranchId);
   if (currentBranch) {
     currentBranch.images.push(image);
     return saveWorkflowHistory(history);
@@ -150,7 +150,13 @@ export const loadPreferences = (): UserPreferences => {
 
 // Storage size management
 export const getStorageSize = (): number => {
-  if (!storage.isAvailable()) return 0;
+  try {
+    const test = '__localStorage_test__';
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+  } catch {
+    return 0;
+  }
   
   let totalSize = 0;
   for (const key in localStorage) {
@@ -175,9 +181,9 @@ export const cleanupOldWorkflows = (daysToKeep: number = 7): number => {
   const cutoffTime = Date.now() - (daysToKeep * 24 * 60 * 60 * 1000);
   let removedCount = 0;
   
-  history.branches.forEach(branch => {
+  history.branches.forEach((branch: any) => {
     const originalLength = branch.images.length;
-    branch.images = branch.images.filter(img => img.timestamp > cutoffTime);
+    branch.images = branch.images.filter((img: any) => img.timestamp > cutoffTime);
     removedCount += originalLength - branch.images.length;
   });
   

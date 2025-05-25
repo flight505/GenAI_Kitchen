@@ -200,7 +200,7 @@ export const useHistoryStore = create<HistoryState & HistoryActions>()(
           
           removeExcludedAction: (action) => {
             set((state) => {
-              state.excludedActions = state.excludedActions.filter(a => a !== action);
+              state.excludedActions = state.excludedActions.filter((a: string) => a !== action);
             });
           },
           

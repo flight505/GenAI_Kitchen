@@ -151,7 +151,7 @@ export const useInpaintStore = create<InpaintState & InpaintActions>()(
       },
       
       loadMask: (id) => {
-        const mask = get().savedMasks.find(m => m.id === id);
+        const mask = get().savedMasks.find((m: any) => m.id === id);
         if (mask) {
           set((state) => {
             state.maskData = mask.maskData;
@@ -161,13 +161,13 @@ export const useInpaintStore = create<InpaintState & InpaintActions>()(
       
       deleteMask: (id) => {
         set((state) => {
-          state.savedMasks = state.savedMasks.filter(m => m.id !== id);
+          state.savedMasks = state.savedMasks.filter((m: any) => m.id !== id);
         });
       },
       
       renameMask: (id, newName) => {
         set((state) => {
-          const mask = state.savedMasks.find(m => m.id === id);
+          const mask = state.savedMasks.find((m: any) => m.id === id);
           if (mask) {
             mask.name = newName;
           }

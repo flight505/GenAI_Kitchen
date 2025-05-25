@@ -18,14 +18,15 @@ export const urlSync = <T extends object>(
   
   // Initialize from URL on load
   if (typeof window !== 'undefined') {
-    const urlState = parseURLState();
+    const searchParams = new URLSearchParams(window.location.search);
+    const urlState = parseURLState(searchParams);
     const initialState: Partial<T> = {};
     
     config.keys.forEach(key => {
-      if (urlState[key] !== undefined) {
+      if ((urlState as any)[key] !== undefined) {
         initialState[key as keyof T] = config.deserialize 
-          ? config.deserialize(urlState[key])
-          : urlState[key];
+          ? config.deserialize((urlState as any)[key])
+          : (urlState as any)[key];
       }
     });
     
@@ -57,7 +58,7 @@ export const urlSync = <T extends object>(
       });
       
       if (Object.keys(updates).length > 0) {
-        updateURLState(updates);
+        updateURLState(updates as any);
       }
     }, config.debounce || 500);
   });

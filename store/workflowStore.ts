@@ -134,7 +134,7 @@ export const useWorkflowStore = create<WorkflowStore>()(
           set((state) => {
             const workflow = state.workflows[workflowId];
             if (workflow) {
-              const iterationIndex = workflow.iterations.findIndex(it => it.id === iterationId);
+              const iterationIndex = workflow.iterations.findIndex((it: InpaintIteration) => it.id === iterationId);
               if (iterationIndex !== -1) {
                 workflow.iterations[iterationIndex] = {
                   ...workflow.iterations[iterationIndex],
@@ -150,7 +150,7 @@ export const useWorkflowStore = create<WorkflowStore>()(
           set((state) => {
             const workflow = state.workflows[workflowId];
             if (workflow) {
-              workflow.iterations = workflow.iterations.filter(it => it.id !== iterationId);
+              workflow.iterations = workflow.iterations.filter((it: InpaintIteration) => it.id !== iterationId);
               workflow.updatedAt = new Date().toISOString();
             }
           });
@@ -216,7 +216,7 @@ export const useWorkflowStore = create<WorkflowStore>()(
           set((state) => {
             const workflow = state.workflows[workflowId];
             if (workflow) {
-              const checkpoint = workflow.checkpoints.find(cp => cp.id === checkpointId);
+              const checkpoint = workflow.checkpoints.find((cp: any) => cp.id === checkpointId);
               if (checkpoint) {
                 const restoredWorkflow = JSON.parse(checkpoint.workflowSnapshot);
                 state.workflows[workflowId] = {

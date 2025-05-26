@@ -90,18 +90,17 @@ export async function POST(request: Request) {
         Authorization: "Token " + process.env.REPLICATE_API_KEY,
       },
       body: JSON.stringify({
-        // Using Flux Fill Pro for inpainting
-        version: "4fde0da7a29a4c5fa35f1ab3612ea23bf470e275f797e5018b4753e9e0090e29",
+        // Using flux-dev-inpainting model by zsxkib
+        version: "ca8350ff748d56b3ebbd5a12bd3436c2214262a4ff8619de9890ecc41751a008",
         input: {
           prompt: enhancePromptWithUnoformStyle(prompt, 'inpainting'),
           image: imageUrl,
           mask: maskImage,
-          steps: 50,
-          guidance: 3,
+          num_inference_steps: 28,
+          strength: 0.95,
+          guidance_scale: 3.5,
           seed: Math.floor(Math.random() * 1000000),
-          output_format: "jpg",
-          safety_tolerance: 2,
-          prompt_upsampling: false
+          output_format: "jpg"
         },
       }),
     });
@@ -180,7 +179,7 @@ export async function POST(request: Request) {
           timestamp: Date.now(),
           success: false,
           error: 'Timeout after 30 seconds',
-          modelVersion: '10b45d01bb46cffc8d7893b36d720e369d732bb2e48ca3db469a18929eff359d'
+          modelVersion: 'ca8350ff748d56b3ebbd5a12bd3436c2214262a4ff8619de9890ecc41751a008'
         });
       } catch (monitorError) {
         console.error('Failed to track timeout:', monitorError);
@@ -195,8 +194,8 @@ export async function POST(request: Request) {
         userId,
         timestamp: Date.now(),
         success: true,
-        cost: monitor.estimateCost('flux-fill-pro'),
-        modelVersion: '10b45d01bb46cffc8d7893b36d720e369d732bb2e48ca3db469a18929eff359d'
+        cost: monitor.estimateCost('flux-dev'),
+        modelVersion: 'ca8350ff748d56b3ebbd5a12bd3436c2214262a4ff8619de9890ecc41751a008'
       });
     } catch (monitorError) {
       console.error('Failed to track usage:', monitorError);

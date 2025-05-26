@@ -39,7 +39,10 @@
       "mcp__playwright__get_console_logs",
       "mcp__playwright__get_network_requests",
       "mcp__playwright__close_browser",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "mcp__21st-magic__21st_magic_component_inspiration",
+      "Bash(kill:*)",
+      "mcp__21st-magic__21st_magic_component_builder"
     ],
     "deny": []
   }

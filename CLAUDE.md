@@ -6,6 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 GenAI Kitchen is an AI-powered kitchen redesign application for Unoform (Danish kitchen manufacturer). It transforms kitchen photos using Replicate's Flux models while maintaining original structure and applying new Scandinavian-inspired designs.
 
+## Memories
+- Always search Replicate.com to find correct models.
+
 ## Common Commands
 
 ### Development
@@ -121,3 +124,4 @@ NEXT_PUBLIC_UPLOAD_API_KEY= # Bytescale widget key
 - Production URL: https://genaikitchen-avse9hgjh-jespers-projects-dbff6d83.vercel.app
 - Auto-deploys from main branch
 - Test credentials: demo_user/KitchenDesign123
+```

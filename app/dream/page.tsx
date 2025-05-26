@@ -9,7 +9,7 @@ import Header from "../../components/Header";
 import WorkflowTabs from "../../components/WorkflowTabs";
 import WorkflowContextBar from "../../components/navigation/WorkflowContextBar";
 import { UploadTab } from "../../components/tabs/UploadTab";
-import { DesignTab } from "../../components/tabs/DesignTab";
+import { DesignTabV2 } from "../../components/tabs/DesignTabV2";
 import { RefineTab } from "../../components/tabs/RefineTab";
 import { CompareTab } from "../../components/tabs/CompareTab";
 import { HistoryTab } from "../../components/tabs/HistoryTab";
@@ -49,11 +49,9 @@ function TabContent({
           />
         )}
         {activeTab === "design" && (
-          <DesignTab
+          <DesignTabV2
             originalPhoto={props.originalPhoto}
             restoredImage={props.restoredImage}
-            kitchenSelections={props.kitchenSelections}
-            setKitchenSelections={props.setKitchenSelections}
             showAdvancedControls={props.showAdvancedControls}
             setShowAdvancedControls={props.setShowAdvancedControls}
             advancedSettings={props.advancedSettings}
@@ -61,6 +59,7 @@ function TabContent({
             generatePhoto={props.generatePhoto}
             loading={props.loading}
             error={props.error}
+            updateCurrentModel={props.updateCurrentModel}
           />
         )}
         {activeTab === "refine" && (
@@ -151,10 +150,17 @@ function DreamPageContent() {
     addIteration
   } = useWorkflowContext();
 
-  async function generatePhoto(fileUrl?: string | ModelType) {
-    // Determine if the parameter is a model type or file URL
-    const model = (fileUrl === 'canny-pro' || fileUrl === 'flux-pro') ? fileUrl : undefined;
-    const actualFileUrl = model ? undefined : fileUrl;
+  async function generatePhoto(modelOrFileUrl?: string | ModelType, customPrompt?: string) {
+    // Handle both old signature (single param) and new signature (model, customPrompt)
+    let model: ModelType | undefined;
+    let actualFileUrl: string | undefined;
+    
+    if (modelOrFileUrl === 'canny-pro' || modelOrFileUrl === 'flux-pro') {
+      model = modelOrFileUrl;
+    } else if (typeof modelOrFileUrl === 'string') {
+      actualFileUrl = modelOrFileUrl;
+    }
+    
     const imageToGenerate = actualFileUrl || originalPhoto;
     if (!imageToGenerate) {
       setError("Please upload an image first");
@@ -169,13 +175,13 @@ function DreamPageContent() {
       },
       body: JSON.stringify({ 
         imageUrl: imageToGenerate, 
-        prompt: generatePromptFromSelections(kitchenSelections) + 
+        prompt: customPrompt || (generatePromptFromSelections(kitchenSelections) + 
           (showAdvancedControls && advancedSettings.wallType !== "smooth" && !advancedSettings.preserveWalls ? `, ${advancedSettings.wallType} walls` : "") +
           (showAdvancedControls && advancedSettings.ceilingType !== "flat" && !advancedSettings.preserveCeiling ? `, ${advancedSettings.ceilingType} ceiling` : "") +
           (showAdvancedControls && advancedSettings.preserveWalls ? ", keep existing walls unchanged" : "") +
           (showAdvancedControls && advancedSettings.preserveFloor ? ", keep existing floor unchanged" : "") +
           (showAdvancedControls && advancedSettings.preserveCeiling ? ", keep existing ceiling unchanged" : "") +
-          (showAdvancedControls && advancedSettings.preserveWindows ? ", keep existing windows unchanged" : ""),
+          (showAdvancedControls && advancedSettings.preserveWindows ? ", keep existing windows unchanged" : "")),
         ...(model && { model }), // Add model parameter if provided
         ...(showAdvancedControls && {
           guidance: advancedSettings.guidance,
@@ -204,7 +210,7 @@ function DreamPageContent() {
       setRestoredImage(imageUrl);
       addToHistory({
         url: imageUrl,
-        prompt: generatePromptFromSelections(kitchenSelections),
+        prompt: customPrompt || generatePromptFromSelections(kitchenSelections),
         type: 'generated'
       });
       

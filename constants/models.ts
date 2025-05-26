@@ -142,12 +142,12 @@ export const MODEL_CONFIGS: Record<string, ModelConfiguration> = {
     maxTimeout: 300
   },
   
-  'flux-fill-pro': {
-    id: 'flux-fill-pro',
+  'flux-dev-inpainting': {
+    id: 'flux-dev-inpainting',
     type: 'fill-pro',
-    name: 'FLUX Fill Pro',
-    version: 'latest', // Update with actual version when available
-    description: 'Professional inpainting for selective area editing.',
+    name: 'FLUX Dev Inpainting',
+    version: 'ca8350ff748d56b3ebbd5a12bd3436c2214262a4ff8619de9890ecc41751a008',
+    description: 'Professional inpainting for selective area editing using FLUX Dev model.',
     capabilities: [
       {
         name: 'Selective Editing',
@@ -182,27 +182,35 @@ export const MODEL_CONFIGS: Record<string, ModelConfiguration> = {
       ],
       optional: [
         {
-          name: 'guidance',
+          name: 'guidance_scale',
           type: 'number',
           description: 'Controls prompt adherence',
           min: 1,
-          max: 30,
-          default: 7.5
+          max: 10,
+          default: 3.5
         },
         {
-          name: 'steps',
+          name: 'num_inference_steps',
           type: 'number',
           description: 'Number of diffusion steps',
           min: 20,
-          max: 100,
-          default: 50
+          max: 50,
+          default: 28
+        },
+        {
+          name: 'strength',
+          type: 'number',
+          description: 'Inpainting strength',
+          min: 0.1,
+          max: 1,
+          default: 0.95
         }
       ],
       defaults: {
-        guidance: 7.5,
-        steps: 50,
-        safety_tolerance: 2,
-        output_format: 'png'
+        guidance_scale: 3.5,
+        num_inference_steps: 28,
+        strength: 0.95,
+        output_format: 'jpg'
       }
     },
     costPerRun: 0.035,

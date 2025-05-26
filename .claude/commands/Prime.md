@@ -9,8 +9,8 @@ eza . --tree --git-ignore
 > Read the files below to get the context of the project. 
 
 > list of files:
-ai_docs/guide.md
 ai_docs/guide_step2_v2.md
+ai_docs/unoform-validation-language.md
 CLAUDE.md
 
 > Dont do anything else.

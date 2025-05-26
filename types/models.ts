@@ -2,7 +2,7 @@
  * Model-specific type definitions for GenAI Kitchen
  */
 
-export type ModelId = 'flux-canny-pro' | 'flux-1.1-pro' | 'flux-fill-pro' | 'flux-redux-dev';
+export type ModelId = 'flux-canny-pro' | 'flux-1.1-pro' | 'flux-fill-pro' | 'flux-dev-inpainting' | 'flux-redux-dev';
 export type ModelType = 'canny-pro' | 'flux-pro' | 'fill-pro' | 'redux';
 
 export interface ModelConfiguration {
@@ -96,4 +96,15 @@ export interface FluxReduxInput {
   seed?: number;
   guidance?: number;
   steps?: number;
+}
+
+export interface FluxDevInpaintingInput {
+  image: string;
+  mask: string;
+  prompt: string;
+  guidance_scale?: number;
+  num_inference_steps?: number;
+  strength?: number;
+  seed?: number;
+  output_format?: 'png' | 'jpg';
 }

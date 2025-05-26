@@ -23,7 +23,8 @@ export interface UsageSummary {
 // Cost estimates per model (in USD)
 const MODEL_COSTS = {
   'flux-canny-pro': 0.05,      // $0.05 per generation
-  'flux-fill-pro': 0.05,        // $0.05 per inpainting
+  'flux-fill-pro': 0.05,        // $0.05 per inpainting (legacy)
+  'flux-dev': 0.05,             // $0.05 per flux-dev inpainting
   'flux-redux-dev': 0.03,       // $0.03 per variation
 };
 

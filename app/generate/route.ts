@@ -2,7 +2,7 @@
 // import redis from "../../utils/redis";
 import { NextResponse } from "next/server";
 // import { headers } from "next/headers";
-import { enhancePromptWithUnoformStyle } from "../../utils/promptTemplating";
+import { enhancePromptForAPI } from "../../utils/unoformPromptBuilder";
 import { APIMonitor } from "../../utils/monitoring";
 import { verifyToken } from "../../utils/server-auth";
 
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       modelVersion = "80a09d66baa990429c2f5ae8a4306bf778a1b3775afd01cc2cc8bdbe9033769c";
       modelName = 'flux-1.1-pro';
       modelInput = {
-        prompt: enhancePromptWithUnoformStyle(prompt, 'generation'),
+        prompt: enhancePromptForAPI(prompt, 'generation'),
         aspect_ratio: "16:9", // Kitchen visualization aspect ratio
         width: 1344,
         height: 768,
@@ -87,7 +87,7 @@ export async function POST(request: Request) {
       modelVersion = "3e03126bd3fbb9349783930f4139eb6c488aef2197c4d3fd2a826b35ccecea3d";
       modelName = 'flux-canny-pro';
       modelInput = {
-        prompt: enhancePromptWithUnoformStyle(prompt, 'generation'),
+        prompt: enhancePromptForAPI(prompt, 'generation'),
         control_image: imageUrl, // Canny Pro uses control_image for structure preservation
         guidance: guidance || 30, // Canny Pro optimal guidance (default: 30)
         steps: steps || 50, // Canny Pro optimal steps (default: 50)

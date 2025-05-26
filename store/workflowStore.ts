@@ -174,6 +174,7 @@ export const useWorkflowStore = create<WorkflowStore>()(
                 id: `branch-${Date.now()}`,
                 name,
                 fromIterationId,
+                images: [],
                 createdAt: new Date().toISOString()
               };
               workflow.branches.push(branch);

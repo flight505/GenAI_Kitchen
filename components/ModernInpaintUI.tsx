@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import MaskDrawingCanvas from './MaskDrawingCanvas';
+import MaskDrawingCanvasV2 from './MaskDrawingCanvasV2';
 
 interface ModernInpaintUIProps {
   imageUrl: string;
@@ -13,7 +13,6 @@ export default function ModernInpaintUI({
   isProcessing 
 }: ModernInpaintUIProps) {
   const [prompt, setPrompt] = useState('');
-  const [isDrawing, setIsDrawing] = useState(false);
 
   return (
     <div className="card mt-6 p-0 overflow-hidden">
@@ -43,54 +42,13 @@ export default function ModernInpaintUI({
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <label className="label">Draw over the area to change</label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setIsDrawing(true)}
-                className={`btn-sm ${isDrawing ? 'btn-default' : 'btn-outline'}`}
-                disabled={isProcessing}
-              >
-                <svg 
-                  className="w-4 h-4 mr-1" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" 
-                  />
-                </svg>
-                Draw
-              </button>
-              <button
-                onClick={() => setIsDrawing(false)}
-                className={`btn-sm ${!isDrawing ? 'btn-default' : 'btn-outline'}`}
-                disabled={isProcessing}
-              >
-                <svg 
-                  className="w-4 h-4 mr-1" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path 
-                    strokeLinecap="round" 
-                    strokeLinejoin="round" 
-                    strokeWidth={2} 
-                    d="M6 18L18 6M6 6l12 12" 
-                  />
-                </svg>
-                Clear
-              </button>
-            </div>
+            <span className="text-sm text-muted-foreground">Use the tools below to create your mask</span>
           </div>
 
           <div className="relative rounded-lg overflow-hidden border-2 border-dashed border-border hover:border-primary/50 transition-colors">
-            <MaskDrawingCanvas
+            <MaskDrawingCanvasV2
               imageUrl={imageUrl}
-              onMaskGenerated={(maskUrl) => {
+              onMaskComplete={(maskUrl) => {
                 console.log('Mask generated, prompt:', prompt);
                 if (prompt.trim()) {
                   onMaskGenerated(maskUrl, prompt);

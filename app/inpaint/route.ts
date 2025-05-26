@@ -2,7 +2,7 @@
 // import redis from "../../utils/redis";
 import { NextResponse } from "next/server";
 // import { headers } from "next/headers";
-import { enhancePromptWithUnoformStyle } from "../../utils/promptTemplating";
+import { enhancePromptForAPI } from "../../utils/unoformPromptBuilder";
 import { APIMonitor } from "../../utils/monitoring";
 import { verifyToken } from "../../utils/server-auth";
 
@@ -77,7 +77,7 @@ export async function POST(request: Request) {
     }
 
     console.log('Starting Replicate inpainting with:', {
-      prompt: enhancePromptWithUnoformStyle(prompt, 'inpainting'),
+      prompt: enhancePromptForAPI(prompt, 'inpainting'),
       hasImage: !!imageUrl,
       hasMask: !!maskImage
     });
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
         // Using flux-dev-inpainting model by zsxkib
         version: "ca8350ff748d56b3ebbd5a12bd3436c2214262a4ff8619de9890ecc41751a008",
         input: {
-          prompt: enhancePromptWithUnoformStyle(prompt, 'inpainting'),
+          prompt: enhancePromptForAPI(prompt, 'inpainting'),
           image: imageUrl,
           mask: maskImage,
           num_inference_steps: 28,

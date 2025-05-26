@@ -2,7 +2,7 @@
 // import redis from "../../utils/redis";
 import { NextResponse } from "next/server";
 // import { headers } from "next/headers";
-import { createStyleConsistentVariation } from "../../utils/promptTemplating";
+import { createStyleConsistentVariationForAPI } from "../../utils/unoformPromptBuilder";
 import { APIMonitor } from "../../utils/monitoring";
 import { verifyToken } from "../../utils/server-auth";
 
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
         version: "96b56814e57dfa601f3f524f82a2b336ef49012cda68828cb37cde66f481b7cb",
         input: {
           redux_image: imageUrl,
-          prompt: prompt ? createStyleConsistentVariation(prompt) : "Danish Scandinavian kitchen design",
+          prompt: prompt ? createStyleConsistentVariationForAPI(prompt) : "Danish Scandinavian kitchen design",
           guidance: guidance || 3,
           num_inference_steps: steps || 28,
           output_format: "webp",

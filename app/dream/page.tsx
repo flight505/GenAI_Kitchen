@@ -10,15 +10,12 @@ import WorkflowTabs from "../../components/WorkflowTabs";
 import WorkflowContextBar from "../../components/navigation/WorkflowContextBar";
 import { UploadTab } from "../../components/tabs/UploadTab";
 import { DesignTabV2 } from "../../components/tabs/DesignTabV2";
-import { RefineTab } from "../../components/tabs/RefineTab";
+import { RefineTabV2 } from "../../components/tabs/RefineTabV2";
 import { CompareTab } from "../../components/tabs/CompareTab";
 import { HistoryTab } from "../../components/tabs/HistoryTab";
 import { ModelType } from "../../components/models/ModelSelectionTabs";
 import { useWorkflowContext } from "../../hooks/useWorkflowContext";
-import { 
-  KitchenDesignSelections,
-  generatePromptFromSelections
-} from "../../utils/kitchenTypes";
+// Removed old kitchen types - using new comprehensive system in DesignTabV2
 import { getCurrentUser } from "../../utils/auth";
 import Toast from "../../components/Toast";
 
@@ -63,10 +60,8 @@ function TabContent({
           />
         )}
         {activeTab === "refine" && (
-          <RefineTab
+          <RefineTabV2
             restoredImage={props.restoredImage}
-            editMode={props.editMode}
-            setEditMode={props.setEditMode}
             inpaintPrompt={props.inpaintPrompt}
             setInpaintPrompt={props.setInpaintPrompt}
             inpainting={props.inpainting}
@@ -106,14 +101,7 @@ function DreamPageContent() {
   const [loading, setLoading] = useState<boolean>(false);
   const [sideBySide, setSideBySide] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
-  const [kitchenSelections, setKitchenSelections] = useState<KitchenDesignSelections>({
-    cabinetStyle: "Modern Flat-Panel",
-    cabinetFinish: "Matte White",
-    countertop: "White Marble",
-    flooring: "Hardwood Oak",
-    wallColor: "Bright White",
-    hardware: "Brushed Steel"
-  });
+  // Kitchen selections now handled internally by DesignTabV2
   const [inpainting, setInpainting] = useState<boolean>(false);
   const [editMode, setEditMode] = useState<boolean>(false);
   const [inpaintPrompt, setInpaintPrompt] = useState<string>("");
@@ -175,13 +163,7 @@ function DreamPageContent() {
       },
       body: JSON.stringify({ 
         imageUrl: imageToGenerate, 
-        prompt: customPrompt || (generatePromptFromSelections(kitchenSelections) + 
-          (showAdvancedControls && advancedSettings.wallType !== "smooth" && !advancedSettings.preserveWalls ? `, ${advancedSettings.wallType} walls` : "") +
-          (showAdvancedControls && advancedSettings.ceilingType !== "flat" && !advancedSettings.preserveCeiling ? `, ${advancedSettings.ceilingType} ceiling` : "") +
-          (showAdvancedControls && advancedSettings.preserveWalls ? ", keep existing walls unchanged" : "") +
-          (showAdvancedControls && advancedSettings.preserveFloor ? ", keep existing floor unchanged" : "") +
-          (showAdvancedControls && advancedSettings.preserveCeiling ? ", keep existing ceiling unchanged" : "") +
-          (showAdvancedControls && advancedSettings.preserveWindows ? ", keep existing windows unchanged" : "")),
+        prompt: customPrompt || "Modern kitchen design", // Default prompt if none provided
         ...(model && { model }), // Add model parameter if provided
         ...(showAdvancedControls && {
           guidance: advancedSettings.guidance,
@@ -210,7 +192,7 @@ function DreamPageContent() {
       setRestoredImage(imageUrl);
       addToHistory({
         url: imageUrl,
-        prompt: customPrompt || generatePromptFromSelections(kitchenSelections),
+        prompt: customPrompt || "Modern kitchen design",
         type: 'generated'
       });
       
@@ -409,8 +391,6 @@ function DreamPageContent() {
             }
           }}
           // Design tab props
-          kitchenSelections={kitchenSelections}
-          setKitchenSelections={setKitchenSelections}
           showAdvancedControls={showAdvancedControls}
           setShowAdvancedControls={setShowAdvancedControls}
           advancedSettings={advancedSettings}

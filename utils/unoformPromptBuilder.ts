@@ -587,6 +587,83 @@ export function enhanceExistingPrompt(
 }
 
 /**
+ * Simple enhancement function for API routes - drop-in replacement for enhancePromptWithUnoformStyle
+ */
+export function enhancePromptForAPI(
+  prompt: string,
+  context: 'generation' | 'inpainting' | 'variation' = 'generation'
+): string {
+  // If prompt already mentions Unoform or Danish/Scandinavian style, return as-is
+  const hasUnoformStyling = /unoform|danish|scandinavian|nordic/i.test(prompt);
+  if (hasUnoformStyling) {
+    return prompt;
+  }
+  
+  // Determine style from prompt keywords
+  let style: UnoformStyle = 'classic'; // default
+  if (/modern|minimalist|sleek/i.test(prompt)) {
+    style = 'avantgarde';
+  } else if (/traditional|timeless/i.test(prompt)) {
+    style = 'shaker';
+  } else if (/copenhagen|minimal/i.test(prompt)) {
+    style = 'copenhagen';
+  }
+  
+  // Build a simple context for enhancement
+  const buildContext: PromptBuildingContext = {
+    style,
+    material: {
+      type: 'wood',
+      name: 'Natural Oak',
+      descriptor: 'light golden oak with straight grain',
+      appearance: ['warm', 'natural']
+    },
+    features: [],
+    details: [],
+    mood: {
+      lighting: 'natural',
+      atmosphere: 'minimalist'
+    },
+    modelType: context === 'generation' ? 'canny-pro' : 'flux-pro',
+    customerPhoto: context === 'generation' || context === 'inpainting'
+  };
+  
+  // Use the builder to enhance
+  const builder = new UnoformPromptBuilder(buildContext);
+  
+  // If we have an existing prompt, we should incorporate it
+  // For now, just append the Unoform styling to the original prompt
+  const unoformEnhancement = builder.buildPrompt();
+  
+  // Extract the key Unoform elements and append to original prompt
+  const styleMatch = unoformEnhancement.match(/(Classic|Copenhagen|Shaker|Avantgarde) Unoform kitchen[^,]*/);
+  const enhancement = styleMatch ? styleMatch[0] : 'in Unoform signature Danish style';
+  
+  return `${prompt}, ${enhancement}`;
+}
+
+/**
+ * Create style-consistent variation - replacement for createStyleConsistentVariation
+ */
+export function createStyleConsistentVariationForAPI(originalPrompt: string): string {
+  // Extract base prompt without Unoform styling
+  const basePrompt = originalPrompt.replace(/, (in Unoform signature Danish style|Classic Unoform kitchen|Copenhagen Unoform kitchen|Shaker Unoform kitchen|Avantgarde Unoform kitchen).*$/i, '');
+  
+  // Add variation terms
+  const variationTerms = [
+    'with alternative color palette',
+    'featuring different material combinations',
+    'with updated styling details',
+    'in a fresh interpretation'
+  ];
+  
+  const randomTerm = variationTerms[Math.floor(Math.random() * variationTerms.length)];
+  
+  // Re-enhance with Unoform style
+  return enhancePromptForAPI(`${basePrompt} ${randomTerm}`, 'variation');
+}
+
+/**
  * Parse existing prompt to context (helper function)
  */
 function parsePromptToContext(

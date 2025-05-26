@@ -7,13 +7,8 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "build:check": "npm run typecheck && npm run build",
-    "test:env": "node test-build.js",
-    "test:api": "node test-api.js",
-    "test:api-routes": "node test-api-routes.js",
-    "test:deploy": "node test-vercel-deploy.js",
+    "test:env": "node validate-env.js",
     "fix-env": "node fix-env-vars.js",
-    "test": "npm run test:env && npm run test:api",
-    "test:all": "npm run test:env && npm run test:api && npm run test:api-routes",
     "deploy": "npm run fix-env && npm run test:env && vercel deploy --prod"
   },
   "dependencies": {
@@ -26,6 +21,7 @@
     "@upstash/redis": "^1.19.1",
     "@vercel/analytics": "^0.1.11",
     "framer-motion": "^8.5.5",
+    "immer": "^10.1.1",
     "jose": "^5.2.0",
     "next": "^13.4.4",
     "react": "^18.2.0",

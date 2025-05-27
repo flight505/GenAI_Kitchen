@@ -45,7 +45,9 @@
       "mcp__21st-magic__21st_magic_component_builder",
       "WebFetch(domain:localhost)",
       "Bash(chmod:*)",
-      "Bash(./test-style-transfer.sh:*)"
+      "Bash(./test-style-transfer.sh:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npx next build:*)"
     ],
     "deny": []
   }

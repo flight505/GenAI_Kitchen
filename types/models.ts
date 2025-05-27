@@ -11,6 +11,7 @@ export interface ModelConfiguration {
   type: ModelType;
   name: string;
   version: string;
+  replicateId: string; // Full Replicate model ID (e.g., "black-forest-labs/flux-1.1-pro")
   description: string;
   capabilities: ModelCapability[];
   parameters: ModelParameters;

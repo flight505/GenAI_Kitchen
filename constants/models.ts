@@ -10,6 +10,7 @@ export const MODEL_CONFIGS: Record<string, ModelConfiguration> = {
     type: 'canny-pro',
     name: 'FLUX Canny Pro',
     version: '3e03126bd3fbb9349783930f4139eb6c488aef2197c4d3fd2a826b35ccecea3d',
+    replicateId: 'black-forest-labs/flux-canny-pro',
     description: 'Professional edge-guided image generation. Maintains exact structure while changing style.',
     capabilities: [
       {
@@ -81,6 +82,7 @@ export const MODEL_CONFIGS: Record<string, ModelConfiguration> = {
     type: 'flux-pro',
     name: 'FLUX 1.1 Pro',
     version: '80a09d66baa990429c2f5ae8a4306bf778a1b3775afd01cc2cc8bdbe9033769c',
+    replicateId: 'black-forest-labs/flux-1.1-pro',
     description: 'Creative text-to-image generation with complete design freedom.',
     capabilities: [
       {
@@ -147,6 +149,7 @@ export const MODEL_CONFIGS: Record<string, ModelConfiguration> = {
     type: 'fill-pro',
     name: 'FLUX Dev Inpainting',
     version: 'ca8350ff748d56b3ebbd5a12bd3436c2214262a4ff8619de9890ecc41751a008',
+    replicateId: 'black-forest-labs/flux-dev-inpainting',
     description: 'Professional inpainting for selective area editing using FLUX Dev model.',
     capabilities: [
       {
@@ -223,6 +226,7 @@ export const MODEL_CONFIGS: Record<string, ModelConfiguration> = {
     type: 'style-transfer',
     name: 'FLUX Redux Dev',
     version: '96b56814e57dfa601f3f524f82a2b336ef49012cda68828cb37cde66f481b7cb',
+    replicateId: 'black-forest-labs/flux-redux-dev',
     description: 'Style transfer from reference images to create variations and apply specific aesthetics.',
     capabilities: [
       {

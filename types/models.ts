@@ -2,8 +2,9 @@
  * Model-specific type definitions for GenAI Kitchen
  */
 
-export type ModelId = 'flux-canny-pro' | 'flux-1.1-pro' | 'flux-fill-pro' | 'flux-dev-inpainting' | 'flux-redux-dev';
-export type ModelType = 'canny-pro' | 'flux-pro' | 'fill-pro' | 'redux' | 'style-transfer';
+export type ModelId = 'flux-canny-pro' | 'flux-1.1-pro' | 'flux-fill-pro' | 'flux-dev-inpainting' | 'flux-redux-dev' | 'flux-depth-dev';
+export type ModelType = 'canny-pro' | 'flux-pro' | 'fill-pro' | 'redux' | 'style-transfer' | 'depth-guided';
+export type ScenarioType = 'style-transfer' | 'empty-room' | 'multi-reference';
 
 export interface ModelConfiguration {
   id: ModelId;
@@ -16,6 +17,11 @@ export interface ModelConfiguration {
   costPerRun: number;
   averageTime: number;
   maxTimeout: number;
+  supportedScenarios?: ScenarioType[];
+  performance?: {
+    quality: 'draft' | 'standard' | 'high';
+    speed: 'fast' | 'normal' | 'slow';
+  };
 }
 
 export interface ModelCapability {

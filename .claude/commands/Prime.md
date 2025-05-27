@@ -10,7 +10,6 @@ eza . --tree --git-ignore
 
 > list of files:
 CLAUDE.md
-docs/PROFESSIONAL_IMPLEMENTATION_GUIDE.md
-docs/PROFESSIONAL_UI_ARCHITECTURE.md
-
+docs/PROFESSIONAL_UI_COMPLETE_GUIDE.md
+docs/PROFESSIONAL_UI_IMPLEMENTATION.md
 > Dont do anything else.

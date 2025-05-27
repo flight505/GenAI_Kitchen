@@ -8,6 +8,8 @@ import downloadPhoto from '@/utils/downloadPhoto';
 import { CompareSlider } from '@/components/CompareSlider';
 import Toast from '@/components/Toast';
 import { MODEL_CONFIGS } from '@/constants/models';
+import { ScenarioSelector, ScenarioType } from './ScenarioSelector';
+import { ReferenceImageManager, ReferenceImage } from './ReferenceImageManager';
 import { 
   Play,
   Download,
@@ -16,21 +18,33 @@ import {
   RefreshCw,
   Upload as UploadIcon,
   Grid3x3,
-  List
+  List,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 
 interface ProfessionalInterfaceV2Props {
-  scenario?: string;
+  initialScenario?: ScenarioType;
 }
 
 interface WorkflowState {
+  scenario: ScenarioType;
   selectedModel: string;
   parameters: Record<string, any>;
   sourceImage: string | null;
+  referenceImages: ReferenceImage[];
   isProcessing: boolean;
   resultImage: string | null;
   prompt: string;
+  roomDimensions?: { width: number; height: number; depth: number };
 }
+
+// Model configurations per scenario
+const scenarioModels: Record<ScenarioType, string[]> = {
+  'style-transfer': ['flux-redux-dev', 'flux-canny-pro'],
+  'empty-room': ['flux-depth-dev', 'flux-1.1-pro'],
+  'multi-reference': ['flux-redux-dev', 'flux-1.1-pro-ultra']
+};
 
 // Simplified model configurations for the UI
 const modelUIConfigs = {
@@ -51,6 +65,33 @@ const modelUIConfigs = {
       width: { min: 256, max: 1440, default: 1344, step: 32, label: 'Width' },
       height: { min: 256, max: 1440, default: 768, step: 32, label: 'Height' }
     }
+  },
+  'flux-redux-dev': {
+    name: 'FLUX Redux',
+    cost: MODEL_CONFIGS['flux-redux-dev'].costPerRun,
+    type: 'style-transfer',
+    parameters: {
+      guidance: { min: 0, max: 10, default: 3, step: 0.5, label: 'Style Strength' },
+      num_inference_steps: { min: 1, max: 50, default: 28, label: 'Steps' }
+    }
+  },
+  'flux-depth-dev': {
+    name: 'FLUX Depth',
+    cost: MODEL_CONFIGS['flux-depth-dev'].costPerRun,
+    type: 'depth',
+    parameters: {
+      guidance_scale: { min: 1, max: 10, default: 3.5, step: 0.5, label: 'Guidance' },
+      num_inference_steps: { min: 1, max: 50, default: 28, label: 'Steps' }
+    }
+  },
+  'flux-1.1-pro-ultra': {
+    name: 'FLUX Pro Ultra',
+    cost: MODEL_CONFIGS['flux-1.1-pro-ultra'].costPerRun,
+    type: 'flux-pro-ultra',
+    parameters: {
+      safety_tolerance: { min: 1, max: 6, default: 2, label: 'Safety' },
+      raw: { type: 'boolean', default: false, label: 'Photorealistic' }
+    }
   }
 };
 
@@ -66,7 +107,7 @@ const uploadOptions: UploadWidgetConfig = {
   }
 };
 
-export function ProfessionalInterfaceV2({ }: ProfessionalInterfaceV2Props) {
+export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: ProfessionalInterfaceV2Props) {
   const { 
     history, 
     addToHistory, 
@@ -79,12 +120,14 @@ export function ProfessionalInterfaceV2({ }: ProfessionalInterfaceV2Props) {
   } = useImageHistory();
   
   const [state, setState] = useState<WorkflowState>({
-    selectedModel: 'flux-canny-pro',
+    scenario: initialScenario,
+    selectedModel: scenarioModels[initialScenario][0],
     parameters: {
-      steps: 50,
-      guidance: 30
+      guidance: 3,
+      num_inference_steps: 28
     },
     sourceImage: null,
+    referenceImages: [],
     isProcessing: false,
     resultImage: null,
     prompt: 'modern Scandinavian kitchen with light oak cabinets, white marble countertops, minimalist design'
@@ -93,8 +136,31 @@ export function ProfessionalInterfaceV2({ }: ProfessionalInterfaceV2Props) {
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'warning' | 'error' } | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [uploadedImages, setUploadedImages] = useState<Array<{ id: string; url: string; name: string }>>([]);
+  const [showReferencePanel, setShowReferencePanel] = useState(true);
 
-  const handleParameterChange = useCallback((key: string, value: number) => {
+  const handleScenarioChange = useCallback((scenario: ScenarioType) => {
+    const availableModels = scenarioModels[scenario];
+    const defaultModel = availableModels[0];
+    const modelConfig = modelUIConfigs[defaultModel as keyof typeof modelUIConfigs];
+    
+    // Reset parameters to defaults for new model
+    const defaultParams: Record<string, any> = {};
+    if (modelConfig?.parameters) {
+      Object.entries(modelConfig.parameters).forEach(([key, config]: [string, any]) => {
+        defaultParams[key] = config.default;
+      });
+    }
+    
+    setState(prev => ({
+      ...prev,
+      scenario,
+      selectedModel: defaultModel,
+      parameters: defaultParams,
+      referenceImages: [] // Clear reference images when switching scenarios
+    }));
+  }, []);
+
+  const handleParameterChange = useCallback((key: string, value: number | boolean) => {
     setState(prev => ({
       ...prev,
       parameters: { ...prev.parameters, [key]: value }
@@ -150,19 +216,72 @@ export function ProfessionalInterfaceV2({ }: ProfessionalInterfaceV2Props) {
       return;
     }
 
+    // Validate scenario-specific requirements
+    if (state.scenario === 'style-transfer' && state.referenceImages.length === 0) {
+      setToast({ message: 'Please add at least one reference image', type: 'warning' });
+      return;
+    }
+
+    if (state.scenario === 'multi-reference' && state.referenceImages.length < 2) {
+      setToast({ message: 'Please add at least 2 reference images for multi-reference', type: 'warning' });
+      return;
+    }
+
     setState(prev => ({ ...prev, isProcessing: true }));
     
     try {
-      const modelConfig = modelUIConfigs[state.selectedModel as keyof typeof modelUIConfigs];
-      const response = await fetch('/generate', {
+      let endpoint = '/generate';
+      let requestBody: any = {
+        imageUrl: state.sourceImage,
+        prompt: state.prompt,
+        model: modelUIConfigs[state.selectedModel as keyof typeof modelUIConfigs].type,
+        ...state.parameters
+      };
+
+      // Determine endpoint and body based on scenario
+      switch (state.scenario) {
+        case 'style-transfer':
+          endpoint = '/api/style-transfer';
+          requestBody = {
+            sourceImage: state.sourceImage,
+            referenceImage: state.referenceImages[0]?.url,
+            scenario: state.scenario,
+            parameters: {
+              ...state.parameters,
+              prompt: state.prompt
+            }
+          };
+          break;
+          
+        case 'empty-room':
+          endpoint = '/api/empty-room';
+          requestBody = {
+            emptyRoom: state.sourceImage,
+            parameters: {
+              ...state.parameters,
+              prompt: state.prompt,
+              roomDimensions: state.roomDimensions
+            }
+          };
+          break;
+          
+        case 'multi-reference':
+          endpoint = '/api/multi-reference';
+          requestBody = {
+            targetImage: state.sourceImage,
+            referenceImages: state.referenceImages,
+            parameters: {
+              ...state.parameters,
+              prompt: state.prompt
+            }
+          };
+          break;
+      }
+
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          imageUrl: state.sourceImage,
-          prompt: state.prompt,
-          model: modelConfig.type,
-          ...state.parameters
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (response.status === 429) {
@@ -175,7 +294,7 @@ export function ProfessionalInterfaceV2({ }: ProfessionalInterfaceV2Props) {
       }
 
       const result = await response.json();
-      const imageUrl = typeof result === 'string' ? result : result[0];
+      const imageUrl = result.finalImage || result.imageUrl || (typeof result === 'string' ? result : result[0]);
       
       setState(prev => ({ ...prev, resultImage: imageUrl }));
       
@@ -185,7 +304,10 @@ export function ProfessionalInterfaceV2({ }: ProfessionalInterfaceV2Props) {
         type: 'generated'
       });
       
-      setToast({ message: 'Image generated successfully!', type: 'success' });
+      setToast({ 
+        message: result.warning || 'Image generated successfully!', 
+        type: result.warning ? 'warning' : 'success' 
+      });
       
     } catch (error) {
       console.error('Generation error:', error);
@@ -219,13 +341,21 @@ export function ProfessionalInterfaceV2({ }: ProfessionalInterfaceV2Props) {
   const currentModel = modelUIConfigs[state.selectedModel as keyof typeof modelUIConfigs];
   const currentImage = getCurrentImage();
   const displayImage = state.resultImage || currentImage?.url;
+  const availableModels = scenarioModels[state.scenario];
 
   return (
-    <div className="h-full flex bg-white">
+    <div className="h-full flex flex-col bg-white">
+      {/* Scenario Selector */}
+      <ScenarioSelector 
+        activeScenario={state.scenario}
+        onChange={handleScenarioChange}
+      />
+      
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Top Bar */}
-        <div className="border-b border-gray-200 px-6 py-4">
+      <div className="flex-1 flex">
+        <div className="flex-1 flex flex-col">
+          {/* Top Bar */}
+          <div className="border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <select 
@@ -233,9 +363,12 @@ export function ProfessionalInterfaceV2({ }: ProfessionalInterfaceV2Props) {
                 onChange={(e) => handleModelChange(e.target.value)}
                 className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-unoform-gold focus:border-transparent"
               >
-                {Object.entries(modelUIConfigs).map(([key, config]) => (
-                  <option key={key} value={key}>{config.name}</option>
-                ))}
+                {availableModels.map(modelKey => {
+                  const config = modelUIConfigs[modelKey as keyof typeof modelUIConfigs];
+                  return config ? (
+                    <option key={modelKey} value={modelKey}>{config.name}</option>
+                  ) : null;
+                })}
               </select>
               
               <div className="text-sm text-gray-600">
@@ -305,18 +438,29 @@ export function ProfessionalInterfaceV2({ }: ProfessionalInterfaceV2Props) {
               {Object.entries(currentModel.parameters).map(([key, config]: [string, any]) => (
                 <div key={key} className="flex items-center gap-3">
                   <label className="text-sm text-gray-600">{config.label}</label>
-                  <input
-                    type="range"
-                    min={config.min}
-                    max={config.max}
-                    step={config.step || 1}
-                    value={state.parameters[key] || config.default}
-                    onChange={(e) => handleParameterChange(key, Number(e.target.value))}
-                    className="w-32"
-                  />
-                  <span className="text-sm font-medium text-gray-900 w-12">
-                    {state.parameters[key] || config.default}
-                  </span>
+                  {config.type === 'boolean' ? (
+                    <input
+                      type="checkbox"
+                      checked={state.parameters[key] || config.default}
+                      onChange={(e) => handleParameterChange(key, e.target.checked)}
+                      className="h-4 w-4 text-unoform-gold focus:ring-unoform-gold border-gray-300 rounded"
+                    />
+                  ) : (
+                    <>
+                      <input
+                        type="range"
+                        min={config.min}
+                        max={config.max}
+                        step={config.step || 1}
+                        value={state.parameters[key] || config.default}
+                        onChange={(e) => handleParameterChange(key, Number(e.target.value))}
+                        className="w-32"
+                      />
+                      <span className="text-sm font-medium text-gray-900 w-12">
+                        {state.parameters[key] || config.default}
+                      </span>
+                    </>
+                  )}
                 </div>
               ))}
             </div>
@@ -382,67 +526,100 @@ export function ProfessionalInterfaceV2({ }: ProfessionalInterfaceV2Props) {
             )}
           </div>
         </div>
-      </div>
 
-      {/* Right Panel - Simple Image Library */}
-      <div className="w-80 border-l border-gray-200 bg-gray-50">
-        <div className="p-4 border-b border-gray-200 bg-white">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-medium text-gray-900">Recent Uploads</h2>
-            <div className="flex items-center gap-2">
+        {/* Right Panel - Reference Images or Recent Uploads */}
+        {(state.scenario === 'style-transfer' || state.scenario === 'multi-reference') && showReferencePanel ? (
+          <div className="w-96 border-l border-gray-200 bg-gray-50 flex flex-col">
+            <div className="p-3 border-b border-gray-200 bg-white flex items-center justify-between">
+              <h2 className="text-sm font-medium text-gray-900">Reference Manager</h2>
               <button
-                onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                className="p-1.5 hover:bg-gray-100 rounded"
-                title={`Switch to ${viewMode === 'grid' ? 'list' : 'grid'} view`}
+                onClick={() => setShowReferencePanel(false)}
+                className="p-1 hover:bg-gray-100 rounded"
+                title="Hide reference panel"
               >
-                {viewMode === 'grid' ? <List className="h-4 w-4 text-gray-600" /> : <Grid3x3 className="h-4 w-4 text-gray-600" />}
+                <Minimize2 className="h-4 w-4 text-gray-600" />
               </button>
             </div>
+            <div className="flex-1">
+              <ReferenceImageManager
+                scenario={state.scenario}
+                maxImages={state.scenario === 'style-transfer' ? 1 : 3}
+                images={state.referenceImages}
+                onImagesChange={(images) => setState(prev => ({ ...prev, referenceImages: images }))}
+              />
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="w-80 border-l border-gray-200 bg-gray-50">
+            <div className="p-4 border-b border-gray-200 bg-white">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-medium text-gray-900">Recent Uploads</h2>
+                <div className="flex items-center gap-2">
+                  {(state.scenario === 'style-transfer' || state.scenario === 'multi-reference') && !showReferencePanel && (
+                    <button
+                      onClick={() => setShowReferencePanel(true)}
+                      className="p-1.5 hover:bg-gray-100 rounded"
+                      title="Show reference panel"
+                    >
+                      <Maximize2 className="h-4 w-4 text-gray-600" />
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
+                    className="p-1.5 hover:bg-gray-100 rounded"
+                    title={`Switch to ${viewMode === 'grid' ? 'list' : 'grid'} view`}
+                  >
+                    {viewMode === 'grid' ? <List className="h-4 w-4 text-gray-600" /> : <Grid3x3 className="h-4 w-4 text-gray-600" />}
+                  </button>
+                </div>
+              </div>
+            </div>
 
-        <div className="p-4 overflow-y-auto h-[calc(100%-60px)]">
-          {uploadedImages.length === 0 ? (
-            <div className="text-center py-8">
-              <UploadIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-              <p className="text-sm text-gray-600">No images uploaded yet</p>
+            <div className="p-4 overflow-y-auto h-[calc(100%-60px)]">
+              {uploadedImages.length === 0 ? (
+                <div className="text-center py-8">
+                  <UploadIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm text-gray-600">No images uploaded yet</p>
+                </div>
+              ) : viewMode === 'grid' ? (
+                <div className="grid grid-cols-2 gap-3">
+                  {uploadedImages.map(img => (
+                    <button
+                      key={img.id}
+                      onClick={() => handleImageSelect(img)}
+                      className={`aspect-video bg-gray-200 rounded hover:ring-2 hover:ring-unoform-gold transition-all overflow-hidden ${
+                        state.sourceImage === img.url ? 'ring-2 ring-unoform-gold' : ''
+                      }`}
+                    >
+                      <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {uploadedImages.map(img => (
+                    <button
+                      key={img.id}
+                      onClick={() => handleImageSelect(img)}
+                      className={`w-full flex items-center gap-3 p-2 hover:bg-white rounded transition-colors ${
+                        state.sourceImage === img.url ? 'bg-white ring-1 ring-unoform-gold' : ''
+                      }`}
+                    >
+                      <div className="w-16 h-12 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                        <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
+                      </div>
+                      <div className="text-left">
+                        <p className="text-sm font-medium text-gray-900 truncate">{img.name}</p>
+                        <p className="text-xs text-gray-500">1344 × 768</p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-          ) : viewMode === 'grid' ? (
-            <div className="grid grid-cols-2 gap-3">
-              {uploadedImages.map(img => (
-                <button
-                  key={img.id}
-                  onClick={() => handleImageSelect(img)}
-                  className={`aspect-video bg-gray-200 rounded hover:ring-2 hover:ring-unoform-gold transition-all overflow-hidden ${
-                    state.sourceImage === img.url ? 'ring-2 ring-unoform-gold' : ''
-                  }`}
-                >
-                  <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {uploadedImages.map(img => (
-                <button
-                  key={img.id}
-                  onClick={() => handleImageSelect(img)}
-                  className={`w-full flex items-center gap-3 p-2 hover:bg-white rounded transition-colors ${
-                    state.sourceImage === img.url ? 'bg-white ring-1 ring-unoform-gold' : ''
-                  }`}
-                >
-                  <div className="w-16 h-12 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                    <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-sm font-medium text-gray-900 truncate">{img.name}</p>
-                    <p className="text-xs text-gray-500">1344 × 768</p>
-                  </div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
       </div>
 
       {/* Toast Notification */}

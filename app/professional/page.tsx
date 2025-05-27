@@ -56,7 +56,7 @@ export default function ProfessionalPage() {
       
       {/* Main Content */}
       <main className="flex-1 overflow-hidden">
-        <ProfessionalInterfaceV2 scenario={scenario} />
+        <ProfessionalInterfaceV2 />
       </main>
     </div>
   );

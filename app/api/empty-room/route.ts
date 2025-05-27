@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { verifyToken } from '@/utils/server-auth';
 import Replicate from 'replicate';
+import { buildUnoformPrompt } from '@/utils/unoformPromptBuilder';
 
 // Initialize Replicate client
 const replicate = new Replicate({
@@ -9,65 +9,44 @@ const replicate = new Replicate({
 
 export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
-    
-    if (!token) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    
-    const payload = await verifyToken(token);
-
     const { 
-      roomImage, 
-      kitchenStyle, 
-      dimensions, 
-      perspective,
+      emptyRoom,
       parameters 
     } = await request.json();
 
     // Validate inputs
-    if (!roomImage) {
-      return NextResponse.json({ error: 'Room image is required' }, { status: 400 });
+    if (!emptyRoom) {
+      return NextResponse.json({ error: 'Empty room image is required' }, { status: 400 });
     }
 
     // Build prompt for empty room projection
-    const prompt = buildEmptyRoomPrompt(kitchenStyle, dimensions);
+    const prompt = buildEmptyRoomPrompt(parameters);
 
-    // Use FLUX Pro with depth-aware prompting
-    // In the future, can switch to FLUX Depth when available
-    const model = 'black-forest-labs/flux-1.1-pro:80a09d66baa990429c2f5ae8a4306bf778a1b3775afd01cc2cc8bdbe9033769c';
+    // Use FLUX Depth for perspective-aware generation
+    const model = 'black-forest-labs/flux-depth-dev:97c293b16e4e42a3a5aae4d9b1cbdfacb99dca63d6c6a0e87810daef1ee37e72';
     
     const input = {
-      prompt,
-      aspect_ratio: parameters?.aspect_ratio || '16:9',
-      width: parameters?.width || 1344,
-      height: parameters?.height || 768,
-      steps: parameters?.steps || 50,
-      guidance: parameters?.guidance || 7.5,
-      seed: parameters?.seed,
-      safety_tolerance: parameters?.safety_tolerance || 2,
-      output_format: parameters?.output_format || 'png',
-      output_quality: parameters?.output_quality || 90,
+      control_image: emptyRoom,
+      prompt: prompt,
+      guidance_scale: parameters?.guidance_scale || 3.5,
+      num_inference_steps: parameters?.num_inference_steps || 28,
+      num_outputs: 1,
+      output_format: 'webp',
+      output_quality: 80
     };
+
+    console.log('Starting empty room generation with FLUX Depth:', input);
 
     // Run the model
     const output = await replicate.run(model, { input });
 
     // Extract the result URL
-    const resultUrl = Array.isArray(output) ? output[0] : output;
+    const imageUrl = Array.isArray(output) ? output[0] : output;
 
     return NextResponse.json({
-      success: true,
-      output: resultUrl,
-      metadata: {
-        model,
-        prompt,
-        parameters: input,
-        cost: 0.055, // FLUX Pro cost per run
-        processingTime: 20, // Estimated time
-      }
+      imageUrl,
+      prompt: prompt,
+      message: 'Kitchen design generated for empty room'
     });
 
   } catch (error: any) {
@@ -79,25 +58,35 @@ export async function POST(request: NextRequest) {
   }
 }
 
-function buildEmptyRoomPrompt(kitchenStyle: string, dimensions?: any): string {
-  const basePrompt = `Empty room transformed into ${kitchenStyle || 'modern'} Unoform kitchen installation`;
+function buildEmptyRoomPrompt(params: any): string {
+  const basePrompt = params.prompt || 'modern Scandinavian kitchen';
   
-  const details = [
-    'maintain exact room dimensions and window positions',
-    'add full kitchen with cabinets, island, and integrated appliances',
-    'preserve natural lighting and shadows',
-    'ensure proper perspective and scale',
-    'professional Scandinavian design',
-    'high-end materials and finishes'
-  ];
-
-  if (dimensions?.width && dimensions?.length) {
-    details.push(`room dimensions: ${dimensions.width}m x ${dimensions.length}m`);
+  // Add room-specific details
+  const roomContext = [];
+  
+  if (params.roomDimensions) {
+    const { width, height, depth } = params.roomDimensions;
+    roomContext.push(`room dimensions ${width}m x ${depth}m x ${height}m height`);
   }
-
-  if (dimensions?.ceilingHeight) {
-    details.push(`ceiling height: ${dimensions.ceilingHeight}m`);
-  }
-
-  return `${basePrompt}, ${details.join(', ')}`;
+  
+  // Add Unoform-specific styling
+  const unoformStyle = buildUnoformPrompt({
+    style: 'copenhagen',
+    material: {
+      type: 'wood',
+      name: 'light oak',
+      descriptor: 'natural wood grain',
+      appearance: ['warm', 'textured']
+    },
+    features: ['integrated handles', 'soft-close drawers'],
+    details: ['minimalist', 'clean lines'],
+    mood: {
+      lighting: 'natural',
+      atmosphere: 'minimalist'
+    },
+    modelType: 'flux-pro'
+  });
+  
+  // Combine all elements
+  return `${basePrompt} in empty room, ${roomContext.join(', ')}, ${unoformStyle}, complete kitchen installation with proper perspective, photorealistic, architectural visualization`;
 }

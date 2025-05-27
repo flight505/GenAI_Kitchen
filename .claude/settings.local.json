@@ -42,7 +42,10 @@
       "Bash(rg:*)",
       "mcp__21st-magic__21st_magic_component_inspiration",
       "Bash(kill:*)",
-      "mcp__21st-magic__21st_magic_component_builder"
+      "mcp__21st-magic__21st_magic_component_builder",
+      "WebFetch(domain:localhost)",
+      "Bash(chmod:*)",
+      "Bash(./test-style-transfer.sh:*)"
     ],
     "deny": []
   }

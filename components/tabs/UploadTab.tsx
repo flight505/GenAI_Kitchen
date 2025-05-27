@@ -4,6 +4,7 @@ import { UrlBuilder } from "@bytescale/sdk";
 import { UploadWidgetConfig } from "@bytescale/upload-widget";
 import { UploadDropzone } from "@bytescale/upload-widget-react";
 import Image from "next/image";
+import StyleTransferShowcase from "../style-transfer/StyleTransferShowcase";
 
 interface UploadTabProps {
   originalPhoto: string | null;
@@ -145,6 +146,13 @@ export function UploadTab({
           </div>
         )}
       </div>
+
+      {/* Style Transfer Showcase - shown when no photo is uploaded */}
+      {!originalPhoto && (
+        <div className="mt-16">
+          <StyleTransferShowcase />
+        </div>
+      )}
     </div>
   );
 }

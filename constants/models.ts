@@ -216,6 +216,86 @@ export const MODEL_CONFIGS: Record<string, ModelConfiguration> = {
     costPerRun: 0.035,
     averageTime: 18,
     maxTimeout: 300
+  },
+
+  'flux-redux-dev': {
+    id: 'flux-redux-dev',
+    type: 'style-transfer',
+    name: 'FLUX Redux Dev',
+    version: '96b56814e57dfa601f3f524f82a2b336ef49012cda68828cb37cde66f481b7cb',
+    description: 'Style transfer from reference images to create variations and apply specific aesthetics.',
+    capabilities: [
+      {
+        name: 'Style Transfer',
+        description: 'Transfer visual style from reference images'
+      },
+      {
+        name: 'Material Transfer',
+        description: 'Apply materials and finishes from references'
+      },
+      {
+        name: 'Element Transfer',
+        description: 'Transfer specific design elements and fixtures'
+      }
+    ],
+    parameters: {
+      required: [
+        {
+          name: 'redux_image',
+          type: 'file',
+          description: 'Reference image for style transfer'
+        }
+      ],
+      optional: [
+        {
+          name: 'prompt',
+          type: 'string',
+          description: 'Additional guidance for the transfer',
+          default: ''
+        },
+        {
+          name: 'guidance',
+          type: 'number',
+          description: 'Guidance strength for style transfer',
+          min: 0,
+          max: 10,
+          default: 3
+        },
+        {
+          name: 'num_inference_steps',
+          type: 'number',
+          description: 'Number of diffusion steps',
+          min: 1,
+          max: 50,
+          default: 28
+        },
+        {
+          name: 'aspect_ratio',
+          type: 'select',
+          description: 'Output aspect ratio',
+          options: ['1:1', '16:9', '21:9', '3:2', '2:3', '4:5', '5:4', '3:4', '4:3', '9:16', '9:21'],
+          default: '16:9'
+        },
+        {
+          name: 'megapixels',
+          type: 'select',
+          description: 'Output resolution',
+          options: ['0.25', '1'],
+          default: '1'
+        }
+      ],
+      defaults: {
+        guidance: 3,
+        num_inference_steps: 28,
+        aspect_ratio: '16:9',
+        megapixels: '1',
+        output_format: 'jpg',
+        output_quality: 90
+      }
+    },
+    costPerRun: 0.025,
+    averageTime: 12,
+    maxTimeout: 300
   }
 };
 

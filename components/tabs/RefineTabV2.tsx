@@ -6,8 +6,11 @@ import InpaintingLayout from '../inpaint/InpaintingLayout';
 import InpaintStepper from '../inpaint/InpaintStepper';
 import ModernInpaintUI from '../ModernInpaintUI';
 import { CompareSlider } from '../CompareSlider';
-import { PhotoIcon, SparklesIcon } from '@heroicons/react/24/outline';
+import StyleTransferPanel from '../style-transfer/StyleTransferPanel';
+import { PhotoIcon, SparklesIcon, PaintBrushIcon, ArrowsRightLeftIcon } from '@heroicons/react/24/outline';
 import type { InpaintIteration } from '../../types/inpainting';
+
+type RefineMode = 'inpaint' | 'style-transfer';
 
 interface RefineTabV2Props {
   restoredImage: string | null;
@@ -41,6 +44,8 @@ export function RefineTabV2({
 
   const [compareMode, setCompareMode] = useState<'slider' | 'sideBySide' | 'overlay'>('slider');
   const [selectedCompareId, setSelectedCompareId] = useState<string | null>(null);
+  const [refineMode, setRefineMode] = useState<RefineMode>('inpaint');
+  const [styleTransferResult, setStyleTransferResult] = useState<string | null>(null);
 
   // Initialize workflow when component mounts with a restored image
   useEffect(() => {
@@ -115,6 +120,24 @@ export function RefineTabV2({
     }
   }, [iterations, addIteration]);
 
+  // Handle style transfer completion
+  const handleStyleTransferComplete = useCallback((resultImage: string, metadata: any) => {
+    setStyleTransferResult(resultImage);
+    // Add as a new iteration
+    const iterationId = addIteration({
+      imageUrl: resultImage,
+      maskUrl: '',
+      prompt: `Style transfer from ${metadata.referenceImage}`,
+      status: 'completed',
+      parentId: currentIterationId,
+      metadata: {
+        type: 'style-transfer',
+        ...metadata
+      }
+    });
+    setCurrentIteration(iterationId);
+  }, [addIteration, currentIterationId, setCurrentIteration]);
+
   if (!restoredImage) {
     return (
       <div className="w-full max-w-4xl mx-auto">
@@ -156,14 +179,48 @@ export function RefineTabV2({
     </div>
   );
 
-  // Center Panel: Inpainting Canvas
+  // Center Panel: Inpainting Canvas or Style Transfer
   const centerPanel = (
     <div className="h-full p-4">
-      <ModernInpaintUI
-        imageUrl={currentIteration?.imageUrl || baseImage}
-        onMaskGenerated={handleInpaint}
-        isProcessing={inpainting}
-      />
+      {/* Mode Toggle */}
+      <div className="flex gap-2 mb-4">
+        <button
+          onClick={() => setRefineMode('inpaint')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+            refineMode === 'inpaint'
+              ? 'bg-[#C19A5B] text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <PaintBrushIcon className="w-4 h-4" />
+          <span>Inpaint</span>
+        </button>
+        <button
+          onClick={() => setRefineMode('style-transfer')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+            refineMode === 'style-transfer'
+              ? 'bg-[#C19A5B] text-white'
+              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+          }`}
+        >
+          <ArrowsRightLeftIcon className="w-4 h-4" />
+          <span>Style Transfer</span>
+        </button>
+      </div>
+
+      {/* Content based on mode */}
+      {refineMode === 'inpaint' ? (
+        <ModernInpaintUI
+          imageUrl={currentIteration?.imageUrl || baseImage}
+          onMaskGenerated={handleInpaint}
+          isProcessing={inpainting}
+        />
+      ) : (
+        <StyleTransferPanel
+          targetImage={currentIteration?.imageUrl || baseImage}
+          onTransferComplete={handleStyleTransferComplete}
+        />
+      )}
     </div>
   );
 

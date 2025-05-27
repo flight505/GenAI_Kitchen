@@ -3,7 +3,7 @@
  */
 
 export type ModelId = 'flux-canny-pro' | 'flux-1.1-pro' | 'flux-fill-pro' | 'flux-dev-inpainting' | 'flux-redux-dev';
-export type ModelType = 'canny-pro' | 'flux-pro' | 'fill-pro' | 'redux';
+export type ModelType = 'canny-pro' | 'flux-pro' | 'fill-pro' | 'redux' | 'style-transfer';
 
 export interface ModelConfiguration {
   id: ModelId;
@@ -91,11 +91,16 @@ export interface FluxFillProInput {
 }
 
 export interface FluxReduxInput {
-  image: string;
+  redux_image: string;
   prompt?: string;
   seed?: number;
   guidance?: number;
-  steps?: number;
+  num_outputs?: number;
+  aspect_ratio?: string;
+  output_format?: string;
+  output_quality?: number;
+  num_inference_steps?: number;
+  megapixels?: string;
 }
 
 export interface FluxDevInpaintingInput {

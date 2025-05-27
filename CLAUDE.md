@@ -77,11 +77,71 @@ Sophisticated prompt templating that:
 - Enhances material descriptions
 - Maintains consistency across generation types
 
+#### Known Issues & Improvements Needed
+1. **Missing "Keep Existing" Options**
+   - Only backsplash has "None" option
+   - Users forced to specify all elements even for partial updates
+   - Need "Keep Existing" options for cabinets, countertops, flooring
+
+2. **Manual Edit Preservation**
+   - Manual prompt edits are lost when UI selections change
+   - No merge strategy between manual edits and generated prompts
+   - Need smart merging to preserve custom additions
+
+3. **Mode Synchronization**
+   - Simple and Advanced modes don't share state
+   - Switching modes loses all selections
+   - Need bidirectional data sync
+
+4. **UI/UX Improvements Needed**
+   - Add tooltips explaining colored tokens in prompt preview
+   - Add info icons to metadata pills
+   - Implement prompt locking for preserving manual sections
+   - Add prompt templates for common scenarios
+
 ### State Management
 - React hooks for local state
 - Custom `useImageHistory` hook for undo/redo
 - Server-side session management
 - Redis for persistent data storage
+
+## Prompt System Architecture
+
+### Components
+1. **DesignTabV2** (`/components/tabs/DesignTabV2.tsx`)
+   - Coordinates between Simple and Advanced modes
+   - Manages prompt generation and editing state
+   - Handles mode switching (but doesn't sync data)
+
+2. **UnoformStyleSelector** (`/components/design/UnoformStyleSelector.tsx`)
+   - Simple mode with predefined Unoform styles
+   - Limited material selection based on style compatibility
+   - Uses `buildUnoformPrompt` for structured generation
+
+3. **KitchenDesignSelector** (`/components/design/KitchenDesignSelector.tsx`)
+   - Advanced mode with comprehensive options
+   - Expandable sections for all design aspects
+   - Uses `KitchenPromptBuilder` for detailed generation
+   - Missing "Keep Existing" options for most categories
+
+4. **PromptPreview** (`/components/prompt/PromptPreview.tsx`)
+   - Visual tokenization with color coding
+   - Manual edit capability with history
+   - Metadata display as pills
+   - Issue: Manual edits overwritten by UI changes
+
+### Data Flow
+1. User selections → Component state
+2. State changes → Prompt builder (UnoformPromptBuilder or KitchenPromptBuilder)
+3. Generated prompt → PromptPreview component
+4. Manual edits → Separate editedPrompt state
+5. Generate button → Uses editedPrompt if manual changes, else generatedPrompt
+
+### Problematic Scenarios
+1. **Partial Updates**: User wants to change only cabinets but forced to specify everything
+2. **Edit Loss**: Manual customizations lost when changing UI selections
+3. **Mode Switching**: All selections lost when switching between Simple/Advanced
+4. **No Explanations**: Users don't understand colored tokens or metadata pills
 
 ## Key Implementation Details
 
@@ -118,6 +178,23 @@ UPSTASH_REDIS_REST_TOKEN=   # Redis authentication
 JWT_SECRET=                 # JWT signing secret
 NEXT_PUBLIC_UPLOAD_API_KEY= # Bytescale widget key
 ```
+
+## Recent Updates (January 2025)
+
+### Codebase Cleanup
+- Migrated all API routes to new `unoformPromptBuilder` system
+- Removed legacy prompt templating files
+- Deleted 20+ unused components and test files
+- Consolidated to single prompt building system
+- Upgraded inpainting to MaskDrawingCanvasV2 with professional features
+
+### Current Issues to Address
+1. Add "Keep Existing" options throughout KitchenDesignSelector
+2. Implement prompt merging to preserve manual edits
+3. Add state synchronization between Simple/Advanced modes
+4. Add UI documentation (tooltips, help text, legends)
+5. Implement prompt locking mechanism
+6. Create prompt templates for common workflows
 
 ## Current Deployment
 

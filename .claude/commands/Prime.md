@@ -10,7 +10,6 @@ eza . --tree --git-ignore
 
 > list of files:
 ai_docs/guide_step2_v2.md
-ai_docs/unoform-validation-language.md
 CLAUDE.md
 
 > Dont do anything else.

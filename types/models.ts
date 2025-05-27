@@ -2,8 +2,8 @@
  * Model-specific type definitions for GenAI Kitchen
  */
 
-export type ModelId = 'flux-canny-pro' | 'flux-1.1-pro' | 'flux-fill-pro' | 'flux-dev-inpainting' | 'flux-redux-dev' | 'flux-depth-dev';
-export type ModelType = 'canny-pro' | 'flux-pro' | 'fill-pro' | 'redux' | 'style-transfer' | 'depth-guided';
+export type ModelId = 'flux-canny-pro' | 'flux-1.1-pro' | 'flux-1.1-pro-ultra' | 'flux-fill-pro' | 'flux-dev-inpainting' | 'flux-redux-dev' | 'flux-depth-dev';
+export type ModelType = 'canny-pro' | 'flux-pro' | 'flux-pro-ultra' | 'fill-pro' | 'inpainting-pro' | 'redux' | 'style-transfer' | 'depth' | 'depth-guided';
 export type ScenarioType = 'style-transfer' | 'empty-room' | 'multi-reference';
 
 export interface ModelConfiguration {
@@ -119,4 +119,26 @@ export interface FluxDevInpaintingInput {
   strength?: number;
   seed?: number;
   output_format?: 'png' | 'jpg';
+}
+
+export interface FluxDepthDevInput {
+  control_image: string;
+  prompt: string;
+  guidance_scale?: number;
+  num_inference_steps?: number;
+  num_outputs?: number;
+  seed?: number;
+  output_format?: 'webp' | 'jpg' | 'png';
+  output_quality?: number;
+}
+
+export interface Flux11ProUltraInput {
+  prompt: string;
+  image_prompt?: string;
+  aspect_ratio?: string;
+  safety_tolerance?: number;
+  raw?: boolean;
+  seed?: number;
+  output_format?: 'jpg' | 'png';
+  output_quality?: number;
 }

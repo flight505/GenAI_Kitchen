@@ -300,6 +300,226 @@ export const MODEL_CONFIGS: Record<string, ModelConfiguration> = {
     costPerRun: 0.025,
     averageTime: 12,
     maxTimeout: 300
+  },
+
+  'flux-depth-dev': {
+    id: 'flux-depth-dev',
+    type: 'depth',
+    name: 'FLUX Depth Dev',
+    version: '97c293b16e4e42a3a5aae4d9b1cbdfacb99dca63d6c6a0e87810daef1ee37e72',
+    replicateId: 'black-forest-labs/flux-depth-dev',
+    description: 'Depth-aware image generation that automatically extracts depth maps for perspective-preserving transformations.',
+    capabilities: [
+      {
+        name: 'Depth Preservation',
+        description: 'Maintains spatial relationships and perspective'
+      },
+      {
+        name: 'Empty Room Filling',
+        description: 'Perfect for furnishing empty spaces'
+      },
+      {
+        name: 'Automatic Depth Maps',
+        description: 'No manual depth map required'
+      }
+    ],
+    parameters: {
+      required: [
+        {
+          name: 'control_image',
+          type: 'file',
+          description: 'Input image for depth extraction'
+        },
+        {
+          name: 'prompt',
+          type: 'string',
+          description: 'Text description of desired output'
+        }
+      ],
+      optional: [
+        {
+          name: 'guidance_scale',
+          type: 'number',
+          description: 'Controls prompt adherence',
+          min: 1,
+          max: 10,
+          default: 3.5
+        },
+        {
+          name: 'num_inference_steps',
+          type: 'number',
+          description: 'Number of diffusion steps',
+          min: 1,
+          max: 50,
+          default: 28
+        },
+        {
+          name: 'num_outputs',
+          type: 'number',
+          description: 'Number of outputs',
+          min: 1,
+          max: 4,
+          default: 1
+        }
+      ],
+      defaults: {
+        guidance_scale: 3.5,
+        num_inference_steps: 28,
+        num_outputs: 1,
+        output_format: 'webp',
+        output_quality: 80
+      }
+    },
+    costPerRun: 0.027,
+    averageTime: 15,
+    maxTimeout: 300
+  },
+
+  'flux-fill-pro': {
+    id: 'flux-fill-pro',
+    type: 'inpainting-pro',
+    name: 'FLUX Fill Pro',
+    version: '51c85098ba6e00bb65fbbdd3ce0cf0bf99b73e913b9a2f1c2c7f16091b5c71e2',
+    replicateId: 'black-forest-labs/flux-fill-pro',
+    description: 'Professional-grade inpainting and outpainting with advanced blending capabilities.',
+    capabilities: [
+      {
+        name: 'Professional Inpainting',
+        description: 'Seamless object replacement and editing'
+      },
+      {
+        name: 'Outpainting',
+        description: 'Extend images beyond original borders'
+      },
+      {
+        name: 'Advanced Blending',
+        description: 'Superior edge blending and context awareness'
+      }
+    ],
+    parameters: {
+      required: [
+        {
+          name: 'image',
+          type: 'file',
+          description: 'Base image to edit'
+        },
+        {
+          name: 'mask',
+          type: 'file',
+          description: 'Mask indicating areas to edit'
+        },
+        {
+          name: 'prompt',
+          type: 'string',
+          description: 'Description of desired changes'
+        }
+      ],
+      optional: [
+        {
+          name: 'guidance',
+          type: 'number',
+          description: 'Controls prompt adherence',
+          min: 1,
+          max: 100,
+          default: 30
+        },
+        {
+          name: 'steps',
+          type: 'number',
+          description: 'Number of diffusion steps',
+          min: 15,
+          max: 50,
+          default: 50
+        },
+        {
+          name: 'safety_tolerance',
+          type: 'number',
+          description: 'Content safety level',
+          min: 1,
+          max: 6,
+          default: 2
+        }
+      ],
+      defaults: {
+        guidance: 30,
+        steps: 50,
+        safety_tolerance: 2,
+        output_format: 'png'
+      }
+    },
+    costPerRun: 0.05,
+    averageTime: 20,
+    maxTimeout: 300
+  },
+
+  'flux-1.1-pro-ultra': {
+    id: 'flux-1.1-pro-ultra',
+    type: 'flux-pro-ultra',
+    name: 'FLUX 1.1 Pro Ultra',
+    version: '4f5cb1b8b85078509ba1635c435b5861db12b21f3cf7c7c73eb72b7d99b5e6f0',
+    replicateId: 'black-forest-labs/flux-1.1-pro-ultra',
+    description: 'High-resolution 4MP image generation with image prompting capability for ultra-detailed outputs.',
+    capabilities: [
+      {
+        name: '4 Megapixel Output',
+        description: 'Generate ultra-high resolution images'
+      },
+      {
+        name: 'Image Prompting',
+        description: 'Use reference images to guide generation'
+      },
+      {
+        name: 'Raw Mode',
+        description: 'Photorealistic output option'
+      }
+    ],
+    parameters: {
+      required: [
+        {
+          name: 'prompt',
+          type: 'string',
+          description: 'Text description of desired output'
+        }
+      ],
+      optional: [
+        {
+          name: 'image_prompt',
+          type: 'file',
+          description: 'Optional reference image for guidance'
+        },
+        {
+          name: 'aspect_ratio',
+          type: 'select',
+          description: 'Output aspect ratio',
+          options: ['1:1', '16:9', '21:9', '3:2', '2:3', '4:5', '5:4', '3:4', '4:3', '9:16', '9:21'],
+          default: '16:9'
+        },
+        {
+          name: 'safety_tolerance',
+          type: 'number',
+          description: 'Content safety level',
+          min: 1,
+          max: 6,
+          default: 2
+        },
+        {
+          name: 'raw',
+          type: 'boolean',
+          description: 'Enable raw photorealistic mode',
+          default: false
+        }
+      ],
+      defaults: {
+        aspect_ratio: '16:9',
+        safety_tolerance: 2,
+        raw: false,
+        output_format: 'jpg',
+        output_quality: 95
+      }
+    },
+    costPerRun: 0.06,
+    averageTime: 25,
+    maxTimeout: 300
   }
 };
 

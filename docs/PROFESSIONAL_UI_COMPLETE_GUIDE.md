@@ -28,15 +28,16 @@ This document consolidates all professional UI requirements for GenAI Kitchen, p
 
 **Implementation**:
 ```typescript
-// Uses FLUX Redux for style mixing
+// Uses FLUX Redux for style transfer from reference
 const styleTransferWorkflow = {
   inputs: {
-    customerKitchen: Image,      // Their actual space
-    styleReference: Image,       // Unoform showroom/catalog
+    customerKitchen: Image,      // Their actual space (base image)
+    styleReference: Image,       // Unoform showroom/catalog (style source)
     preserveLayout: boolean,     // Keep room structure
-    styleStrength: 0-1          // How much style to apply
+    guidance: 0-10              // How strongly to follow the prompt
   },
-  model: 'flux-redux-dev',
+  model: 'black-forest-labs/flux-redux-dev',
+  approach: 'Use customerKitchen as base, extract style from reference via prompt',
   output: 'styled kitchen maintaining original layout'
 }
 ```
@@ -46,16 +47,18 @@ const styleTransferWorkflow = {
 
 **Implementation**:
 ```typescript
-// Uses FLUX Depth or FLUX Pro with perspective prompting
+// Uses FLUX Depth for perspective-aware generation
 const emptyRoomWorkflow = {
   inputs: {
-    emptyRoom: Image,           // Bare room photo
-    roomDimensions: {w,h,d},    // Optional measurements
-    kitchenStyle: UnoformStyle, // Selected design
-    perspective: 'auto'         // Or manual guides
+    emptyRoom: Image,           // Bare room photo (control image)
+    kitchenStyle: UnoformStyle, // Selected design  
+    prompt: string,             // Detailed kitchen description
+    guidance: 0-10,             // Prompt adherence strength
+    steps: 28                   // Quality steps
   },
-  model: 'flux-depth-dev' || 'flux-1.1-pro',
-  output: 'fully furnished kitchen with proper perspective'
+  model: 'black-forest-labs/flux-depth-dev',
+  approach: 'Auto-generates depth map from empty room, maintains perspective',
+  output: 'fully furnished kitchen with proper perspective and spatial relationships'
 }
 ```
 
@@ -64,19 +67,25 @@ const emptyRoomWorkflow = {
 
 **Implementation**:
 ```typescript
-// Uses FLUX Redux iteratively or FLUX Pro with composite prompting
+// Uses FLUX Redux iteratively (no direct multi-image support)
 const multiReferenceWorkflow = {
   inputs: {
-    targetSpace: Image,         // Customer's kitchen
+    targetSpace: Image,         // Customer's kitchen base
     references: [{
-      image: Image,
-      elements: ['cabinets', 'island', 'colors'],
-      weight: 0-1
+      image: Image,             // Reference kitchen A
+      elements: ['cabinets'],   // What to extract
+      prompt: string            // "Apply cabinet style from reference"
+    }, {
+      image: Image,             // Reference kitchen B  
+      elements: ['island'],
+      prompt: string
     }],
-    blendMode: 'sequential' || 'weighted'
+    processOrder: 'sequential'  // Apply one at a time
   },
-  model: 'flux-redux-dev',
-  output: 'kitchen combining selected elements'
+  model: 'black-forest-labs/flux-redux-dev',
+  approach: 'Sequential processing - each reference applied to previous result',
+  limitation: 'No native multi-image support - requires multiple API calls',
+  output: 'kitchen with combined elements (quality may degrade with each pass)'
 }
 ```
 
@@ -92,7 +101,7 @@ const multiReferenceWorkflow = {
 │  └─────────────────┴──────────────┴─────────────────┘          │
 │  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━          │
 ├─────────────────────────────────────────────────────────────────┤
-│  Model: [FLUX Redux ▼]  Cost: $0.025/img  Time: ~12s           │
+│  Model: [FLUX Redux ▼]  Cost: ~$0.012/img  Time: ~15-20s       │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────────────────────────┐  ┌───────────────────────┐ │
 │  │                                 │  │   Reference Manager   │ │
@@ -299,14 +308,18 @@ export async function POST(request: Request) {
 }
 
 async function handleStyleTransfer(source: string, reference: string, params: any) {
+  // Redux only accepts single image - use customer's kitchen as base
   const input = {
-    image: source,
-    reference_image: reference,
-    prompt: buildStyleTransferPrompt(params),
-    strength: params.styleStrength || 0.8,
-    guidance_scale: params.guidance || 3.5
+    image: source,  // Customer's kitchen
+    prompt: buildStyleTransferPrompt(reference, params), // Include reference style in prompt
+    guidance_scale: params.guidance || 3.5,
+    num_outputs: 1,
+    output_format: 'webp',
+    output_quality: 80
   };
   
+  // Note: Reference image style must be described in the prompt
+  // Redux doesn't accept reference_image parameter
   return replicate.run('black-forest-labs/flux-redux-dev', { input });
 }
 ```
@@ -314,37 +327,53 @@ async function handleStyleTransfer(source: string, reference: string, params: an
 ### 2. Create `/api/empty-room/route.ts`
 ```typescript
 async function handleEmptyRoom(emptyRoom: string, params: any) {
-  // Use FLUX Pro with perspective-aware prompting
+  // Use FLUX Depth for perspective-aware generation
   const input = {
-    prompt: buildEmptyRoomPrompt(params),
-    aspect_ratio: '16:9',
-    width: 1344,
-    height: 768,
-    guidance_scale: 7.5,
-    num_inference_steps: 50
+    control_image: emptyRoom,  // Empty room photo
+    prompt: buildEmptyRoomPrompt(params),  // Kitchen design description
+    guidance_scale: params.guidance || 3.5,
+    num_inference_steps: params.steps || 28,
+    num_outputs: 1,
+    output_format: 'webp',
+    output_quality: 80
   };
   
-  return replicate.run('black-forest-labs/flux-1.1-pro', { input });
+  // Depth model automatically extracts depth map and maintains perspective
+  return replicate.run('black-forest-labs/flux-depth-dev', { input });
 }
 ```
 
 ### 3. Create `/api/multi-reference/route.ts`
 ```typescript
 async function handleMultiReference(target: string, references: ReferenceImage[], params: any) {
-  // Sequential processing with Redux
+  // Sequential processing with Redux (no native multi-image support)
   let currentImage = target;
+  let processedCount = 0;
   
   for (const ref of references) {
     const input = {
       image: currentImage,
-      prompt: buildElementPrompt(ref.elements, ref.weight),
-      guidance_scale: 3.5 * ref.weight
+      prompt: buildElementPrompt(ref.elements, ref.image), // Describe elements from ref
+      guidance_scale: params.guidance || 3.5,
+      num_outputs: 1,
+      output_format: 'webp',
+      output_quality: 80
     };
     
-    currentImage = await replicate.run('black-forest-labs/flux-redux-dev', { input });
+    try {
+      currentImage = await replicate.run('black-forest-labs/flux-redux-dev', { input });
+      processedCount++;
+    } catch (error) {
+      console.error(`Failed at reference ${processedCount + 1}:`, error);
+      break;
+    }
   }
   
-  return currentImage;
+  return {
+    finalImage: currentImage,
+    processedReferences: processedCount,
+    warning: 'Quality may degrade with multiple iterations'
+  };
 }
 ```
 
@@ -389,16 +418,35 @@ async function handleMultiReference(target: string, references: ReferenceImage[]
 
 ## Model Requirements
 
-### Verified Available Models
-- ✅ `flux-1.1-pro` - Creative generation, empty rooms
-- ✅ `flux-canny-pro` - Structure preservation
-- ✅ `flux-dev-inpainting` - Selective editing
-- ✅ `flux-redux-dev` - Style transfer and variations
+### Verified Available Models on Replicate
+- ✅ `black-forest-labs/flux-1.1-pro` - Creative generation, empty rooms
+- ✅ `black-forest-labs/flux-1.1-pro-ultra` - 4MP high-resolution, supports image prompting
+- ✅ `black-forest-labs/flux-canny-pro` - Structure preservation with edge detection
+- ✅ `black-forest-labs/flux-depth-dev` - Depth-aware generation with automatic depth maps
+- ✅ `black-forest-labs/flux-redux-dev` - Style transfer and variations (single image only)
+- ✅ `black-forest-labs/flux-fill-pro` - Professional inpainting and outpainting
 
 ### Model Selection by Scenario
-1. **Style Transfer**: FLUX Redux Dev (primary), FLUX Pro (fallback)
-2. **Empty Room**: FLUX Pro with prompting, FLUX Depth (if available)
-3. **Multi-Reference**: FLUX Redux Dev (sequential), FLUX Pro (composite)
+1. **Style Transfer**: FLUX Redux Dev - applies style from one image to another
+2. **Empty Room**: FLUX Depth Dev - maintains perspective with depth maps
+3. **Multi-Reference**: Sequential FLUX Redux Dev - process iteratively (no direct multi-image support)
+
+### Important Model Limitations & Workarounds
+
+#### FLUX Redux Limitations
+- **Single Image Input Only**: Cannot accept multiple reference images directly
+- **Workaround**: Sequential processing or detailed prompt engineering
+- **Style Transfer**: Must describe reference style in text prompt
+
+#### FLUX Depth Capabilities
+- **Automatic Depth Extraction**: No need for manual depth maps
+- **Best For**: Empty rooms, maintaining spatial relationships
+- **Control Image**: Uses empty room as structural guide
+
+#### Multi-Reference Challenge
+- **No Native Support**: Replicate API doesn't support multi-image composition
+- **Quality Degradation**: Each sequential pass may reduce quality
+- **Alternative Approach**: Consider FLUX 1.1 Pro Ultra with detailed composite prompting
 
 ## Testing Checklist
 
@@ -477,14 +525,39 @@ async function handleMultiReference(target: string, references: ReferenceImage[]
 --spacing-xl: 32px;
 ```
 
+## Practical Implementation Considerations
+
+### Style Transfer Workflow
+Since FLUX Redux doesn't accept reference images directly:
+1. **Prompt Engineering**: Extract style characteristics from reference and describe in prompt
+2. **Visual Analysis**: Consider pre-analyzing reference image to extract:
+   - Color palette (hex codes)
+   - Material descriptions
+   - Cabinet door styles
+   - Hardware finishes
+3. **Two-Step Process**: Option to use Canny/Depth for structure + Redux for style
+
+### Empty Room Best Practices  
+FLUX Depth is ideal for this scenario:
+1. **Image Requirements**: Well-lit empty room photos work best
+2. **Prompt Details**: Include room dimensions and orientation in prompt
+3. **Fallback Option**: FLUX 1.1 Pro for rooms with complex lighting
+
+### Multi-Reference Alternatives
+Given no native multi-image support:
+1. **Priority Order**: Process most important reference first
+2. **Prompt Aggregation**: Combine all element descriptions in single prompt with FLUX Pro Ultra
+3. **Quality Control**: Limit to 2-3 references to minimize degradation
+4. **Manual Composition**: Use FLUX Fill Pro for selective element replacement
+
 ## Conclusion
 
-This guide provides a complete blueprint for implementing the professional UI with full support for advanced scenarios. By incorporating modern UI patterns from 21st.dev while maintaining Unoform's brand identity, we create a professional tool that is both powerful and approachable.
+This guide provides a complete blueprint for implementing the professional UI with advanced scenarios, accounting for actual model capabilities on Replicate. The implementation requires creative workarounds for multi-image workflows but can still deliver powerful results.
 
-The implementation focuses on:
-1. **Clean, modern UI** - No dark patterns, minimal aesthetic
-2. **Professional workflows** - Three core scenarios fully supported
-3. **Incremental development** - Build and test each feature thoroughly
-4. **User efficiency** - 50% faster than consumer interface
+Key takeaways:
+1. **Model Reality**: Work within single-image constraints of FLUX models
+2. **Sequential Processing**: Multi-reference requires iterative approach  
+3. **Prompt Engineering**: Critical for style transfer without direct reference support
+4. **User Expectations**: Set clear limitations for multi-reference quality
 
-Next steps: Begin Phase 1 implementation with the modern tab navigation system.
+Next steps: Begin Phase 1 implementation with scenario tabs and updated model configurations.

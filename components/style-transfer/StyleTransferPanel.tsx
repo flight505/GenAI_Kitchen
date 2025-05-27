@@ -4,6 +4,7 @@ import React, { useState, useCallback } from 'react';
 import Image from 'next/image';
 import { Upload, ArrowRight, Sparkles, Palette, Package, Loader2 } from 'lucide-react';
 import { UploadDropzone } from '@bytescale/upload-widget-react';
+import { UrlBuilder } from '@bytescale/sdk';
 import LoadingDots from '@/components/LoadingDots';
 
 interface StyleTransferPanelProps {
@@ -115,14 +116,23 @@ export default function StyleTransferPanel({ targetImage, onTransferComplete }: 
             options={{
               apiKey: process.env.NEXT_PUBLIC_UPLOAD_API_KEY ?? '',
               maxFileCount: 1,
-              acceptedFileTypes: ['image/*'],
+              mimeTypes: ['image/jpeg', 'image/png', 'image/webp'],
               styles: {
                 colors: {
                   primary: '#C19A5B',
                 },
               },
             }}
-            onUpdate={handleReferenceUpload}
+            onUpdate={({ uploadedFiles }) => {
+              if (uploadedFiles.length > 0) {
+                const image = uploadedFiles[0];
+                const imageUrl = UrlBuilder.url({
+                  accountId: image.accountId,
+                  filePath: image.filePath,
+                });
+                handleReferenceUpload([imageUrl]);
+              }
+            }}
           />
         ) : (
           <div className="relative group">

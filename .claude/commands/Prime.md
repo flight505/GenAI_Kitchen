@@ -9,7 +9,8 @@ eza . --tree --git-ignore
 > Read the files below to get the context of the project. 
 
 > list of files:
-ai_docs/guide_step2_v2.md
 CLAUDE.md
+docs/ADVANCED_SCENARIOS_IMPLEMENTATION_PLAN.md
+docs/STYLE_TRANSFER_IMPLEMENTATION.md
 
 > Dont do anything else.

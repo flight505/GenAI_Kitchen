@@ -1,0 +1,13 @@
+
+> dev
+> next dev
+
+  ▲ Next.js 13.5.11
+  - Local:        http://localhost:3000
+  - Environments: .env.local, .env
+
+ ✓ Ready in 1031ms
+ ✓ Compiled /page in 1136ms (474 modules)
+ ✓ Compiled in 124ms (246 modules)
+ ✓ Compiled /middleware in 124ms (134 modules)
+ ✓ Compiled /login/page in 120ms (469 modules)

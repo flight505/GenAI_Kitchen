@@ -37,6 +37,12 @@ export default function Header() {
               My Designs
             </Link>
             <Link
+              href="/professional"
+              className="text-body text-unoform-gray-medium hover:text-unoform-black transition-colors duration-200 font-normal"
+            >
+              Professional
+            </Link>
+            <Link
               href="/dream"
               className="bg-unoform-gold text-white px-6 py-2 font-normal hover:bg-unoform-gold-dark transition-all duration-200 text-body uppercase tracking-wider"
             >

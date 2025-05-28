@@ -1,9 +1,9 @@
 'use client';
 
 import React from 'react';
-import { Sparkles, Home, Layers } from 'lucide-react';
+import { Sparkles, Home, Layers, FileStack } from 'lucide-react';
 
-export type ScenarioType = 'style-transfer' | 'empty-room' | 'multi-reference';
+export type ScenarioType = 'style-transfer' | 'empty-room' | 'multi-reference' | 'batch-processing';
 
 interface ScenarioSelectorProps {
   activeScenario: ScenarioType;
@@ -28,6 +28,12 @@ const scenarios = [
     name: 'Multi-Reference',
     icon: Layers,
     description: 'Combine elements from multiple designs'
+  },
+  {
+    id: 'batch-processing' as ScenarioType,
+    name: 'Batch Processing',
+    icon: FileStack,
+    description: 'Process multiple customer images with the same style'
   }
 ];
 
@@ -35,7 +41,7 @@ export function ScenarioSelector({ activeScenario, onChange }: ScenarioSelectorP
   return (
     <div className="border-b border-gray-200">
       <div className="px-6">
-        <nav className="flex space-x-8" aria-label="Scenarios">
+        <nav className="flex gap-2" aria-label="Scenarios">
           {scenarios.map((scenario) => {
             const Icon = scenario.icon;
             const isActive = activeScenario === scenario.id;
@@ -45,10 +51,12 @@ export function ScenarioSelector({ activeScenario, onChange }: ScenarioSelectorP
                 key={scenario.id}
                 onClick={() => onChange(scenario.id)}
                 className={`
-                  relative py-4 px-1 border-b-2 font-medium text-sm transition-all
+                  relative rounded-none py-3 px-6 text-sm font-medium transition-all
+                  after:absolute after:inset-x-0 after:bottom-0 after:-mb-px after:h-0.5
+                  hover:bg-gray-50 hover:text-gray-900
                   ${isActive 
-                    ? 'border-unoform-gold text-gray-900' 
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    ? 'text-gray-900 after:bg-unoform-gold' 
+                    : 'text-gray-500 after:bg-transparent'
                   }
                 `}
                 title={scenario.description}

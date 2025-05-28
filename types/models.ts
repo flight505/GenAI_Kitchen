@@ -2,8 +2,8 @@
  * Model-specific type definitions for GenAI Kitchen
  */
 
-export type ModelId = 'flux-canny-pro' | 'flux-1.1-pro' | 'flux-1.1-pro-ultra' | 'flux-fill-pro' | 'flux-dev-inpainting' | 'flux-redux-dev' | 'flux-depth-dev';
-export type ModelType = 'canny-pro' | 'flux-pro' | 'flux-pro-ultra' | 'fill-pro' | 'inpainting-pro' | 'redux' | 'style-transfer' | 'depth' | 'depth-guided';
+export type ModelId = 'flux-canny-pro' | 'flux-1.1-pro' | 'flux-1.1-pro-ultra' | 'flux-fill-pro' | 'flux-dev-inpainting' | 'flux-redux-dev' | 'flux-depth-dev' | 'interior-design' | 'instant-id';
+export type ModelType = 'canny-pro' | 'flux-pro' | 'flux-pro-ultra' | 'fill-pro' | 'inpainting-pro' | 'redux' | 'style-transfer' | 'depth' | 'depth-guided' | 'interior-specialized' | 'ip-adapter';
 export type ScenarioType = 'style-transfer' | 'empty-room' | 'multi-reference';
 
 export interface ModelConfiguration {
@@ -141,4 +141,26 @@ export interface Flux11ProUltraInput {
   seed?: number;
   output_format?: 'jpg' | 'png';
   output_quality?: number;
+}
+
+export interface InteriorDesignInput {
+  image: string;
+  prompt: string;
+  negative_prompt?: string;
+  guidance_scale?: number;
+  prompt_strength?: number;
+  num_inference_steps?: number;
+  seed?: number;
+}
+
+export interface InstantIDInput {
+  image: string;
+  prompt: string;
+  negative_prompt?: string;
+  ip_adapter_scale?: number;
+  controlnet_conditioning_scale?: number;
+  guidance_scale?: number;
+  num_inference_steps?: number;
+  width?: number;
+  height?: number;
 }

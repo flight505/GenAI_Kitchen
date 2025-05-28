@@ -5,6 +5,182 @@
 import { ModelConfiguration } from '../types/models';
 
 export const MODEL_CONFIGS: Record<string, ModelConfiguration> = {
+  'interior-design': {
+    id: 'interior-design',
+    type: 'interior-specialized',
+    name: 'Interior Design AI',
+    version: 'latest',
+    replicateId: 'adirik/interior-design',
+    description: 'Specialized model for realistic interior design with enhanced style transfer capabilities.',
+    capabilities: [
+      {
+        name: 'Interior Optimization',
+        description: 'Specifically trained on interior spaces'
+      },
+      {
+        name: 'Style Transfer',
+        description: 'Better understanding of furniture and materials'
+      },
+      {
+        name: 'Negative Prompting',
+        description: 'Avoid unwanted elements with negative prompts'
+      }
+    ],
+    parameters: {
+      required: [
+        {
+          name: 'image',
+          type: 'file',
+          description: 'Reference image as base'
+        },
+        {
+          name: 'prompt',
+          type: 'string',
+          description: 'Detailed description of desired design'
+        }
+      ],
+      optional: [
+        {
+          name: 'negative_prompt',
+          type: 'string',
+          description: 'Elements to avoid',
+          default: ''
+        },
+        {
+          name: 'guidance_scale',
+          type: 'number',
+          description: 'Prompt adherence strength',
+          min: 1,
+          max: 20,
+          default: 7.5
+        },
+        {
+          name: 'prompt_strength',
+          type: 'number',
+          description: 'Transformation strength',
+          min: 0,
+          max: 1,
+          default: 0.8
+        },
+        {
+          name: 'num_inference_steps',
+          type: 'number',
+          description: 'Quality steps',
+          min: 20,
+          max: 50,
+          default: 30
+        },
+        {
+          name: 'seed',
+          type: 'number',
+          description: 'Random seed (-1 for random)',
+          min: -1,
+          max: 2147483647,
+          default: -1
+        }
+      ],
+      defaults: {
+        negative_prompt: '',
+        guidance_scale: 7.5,
+        prompt_strength: 0.8,
+        num_inference_steps: 30,
+        seed: -1,
+        output_format: 'png'
+      }
+    },
+    costPerRun: 0.008,
+    averageTime: 12,
+    maxTimeout: 300
+  },
+
+  'instant-id': {
+    id: 'instant-id',
+    type: 'ip-adapter',
+    name: 'InstantID with IP-Adapter',
+    version: 'latest',
+    replicateId: 'zsxkib/instant-id',
+    description: 'Advanced style transfer using IP-Adapter and ControlNet for better style blending.',
+    capabilities: [
+      {
+        name: 'IP-Adapter',
+        description: 'Image-based prompting for style and composition'
+      },
+      {
+        name: 'ControlNet Integration',
+        description: 'Maintains structure with Canny edge detection'
+      },
+      {
+        name: 'Fine Control',
+        description: 'Separate scales for structure vs style'
+      }
+    ],
+    parameters: {
+      required: [
+        {
+          name: 'image',
+          type: 'file',
+          description: 'Input image'
+        },
+        {
+          name: 'prompt',
+          type: 'string',
+          description: 'Text prompt for generation'
+        }
+      ],
+      optional: [
+        {
+          name: 'negative_prompt',
+          type: 'string',
+          description: 'Elements to avoid',
+          default: ''
+        },
+        {
+          name: 'ip_adapter_scale',
+          type: 'number',
+          description: 'Style transfer strength',
+          min: 0,
+          max: 1,
+          default: 0.8
+        },
+        {
+          name: 'controlnet_conditioning_scale',
+          type: 'number',
+          description: 'Structure preservation strength',
+          min: 0,
+          max: 1,
+          default: 0.8
+        },
+        {
+          name: 'guidance_scale',
+          type: 'number',
+          description: 'Overall guidance',
+          min: 1,
+          max: 10,
+          default: 5
+        },
+        {
+          name: 'num_inference_steps',
+          type: 'number',
+          description: 'Quality steps',
+          min: 10,
+          max: 50,
+          default: 30
+        }
+      ],
+      defaults: {
+        negative_prompt: '',
+        ip_adapter_scale: 0.8,
+        controlnet_conditioning_scale: 0.8,
+        guidance_scale: 5,
+        num_inference_steps: 30,
+        output_format: 'png'
+      }
+    },
+    costPerRun: 0.01,
+    averageTime: 15,
+    maxTimeout: 300
+  },
+
   'flux-canny-pro': {
     id: 'flux-canny-pro',
     type: 'canny-pro',

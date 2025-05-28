@@ -31,8 +31,14 @@ export default function HomePage() {
                 Start Designing Now
               </Link>
               <Link
-                href="/login"
+                href="/professional"
                 className="border border-unoform-black text-unoform-black px-8 py-3 font-normal uppercase tracking-wider hover:bg-unoform-black hover:text-white transition-all duration-200"
+              >
+                Professional Tools
+              </Link>
+              <Link
+                href="/login"
+                className="border border-unoform-gray text-unoform-gray px-8 py-3 font-normal uppercase tracking-wider hover:bg-unoform-gray hover:text-white transition-all duration-200"
               >
                 Employee Access
               </Link>

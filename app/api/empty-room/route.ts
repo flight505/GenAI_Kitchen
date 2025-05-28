@@ -69,6 +69,16 @@ function buildEmptyRoomPrompt(params: any): string {
     roomContext.push(`room dimensions ${width}m x ${depth}m x ${height}m height`);
   }
   
+  // Add lighting condition
+  const lightingDescriptions = {
+    natural: 'natural daylight streaming through windows, soft shadows',
+    evening: 'warm evening ambient lighting, cozy atmosphere',
+    bright: 'bright studio lighting, evenly lit, professional photography'
+  };
+  
+  const lighting = params.lightingCondition || 'natural';
+  const lightingDesc = lightingDescriptions[lighting as keyof typeof lightingDescriptions];
+  
   // Add Unoform-specific styling
   const unoformStyle = buildUnoformPrompt({
     style: 'copenhagen',
@@ -81,12 +91,12 @@ function buildEmptyRoomPrompt(params: any): string {
     features: ['integrated handles', 'soft-close drawers'],
     details: ['minimalist', 'clean lines'],
     mood: {
-      lighting: 'natural',
+      lighting: lighting,
       atmosphere: 'minimalist'
     },
     modelType: 'flux-pro'
   });
   
   // Combine all elements
-  return `${basePrompt} in empty room, ${roomContext.join(', ')}, ${unoformStyle}, complete kitchen installation with proper perspective, photorealistic, architectural visualization`;
+  return `${basePrompt} in empty room, ${roomContext.join(', ')}, ${lightingDesc}, ${unoformStyle}, complete kitchen installation with proper perspective, photorealistic, architectural visualization`;
 }

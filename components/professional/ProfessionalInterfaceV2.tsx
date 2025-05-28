@@ -5,11 +5,21 @@ import { UploadDropzone } from '@bytescale/upload-widget-react';
 import { UploadWidgetConfig } from '@bytescale/upload-widget';
 import { useImageHistory } from '@/hooks/useImageHistory';
 import downloadPhoto from '@/utils/downloadPhoto';
+import { imageCache } from '@/utils/imageCache';
+import { requestDebouncer } from '@/utils/requestDebouncer';
 import { CompareSlider } from '@/components/CompareSlider';
 import Toast from '@/components/Toast';
 import { MODEL_CONFIGS } from '@/constants/models';
 import { ScenarioSelector, ScenarioType } from './ScenarioSelector';
 import { ReferenceImageManager, ReferenceImage } from './ReferenceImageManager';
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '../ui/resizable';
+import { ProgressTracker, useProgressTracker } from './ProgressTracker';
+import { PerspectiveGuides } from './PerspectiveGuides';
+import { CostEstimator } from './CostEstimator';
+import { PresetTemplates, PresetTemplate } from './PresetTemplates';
+import { ExportTemplates, ExportData } from './ExportTemplates';
+import { CacheStatus } from './CacheStatus';
+import BatchProcessing from './BatchProcessing';
 import { 
   Play,
   Download,
@@ -20,7 +30,11 @@ import {
   Grid3x3,
   List,
   Maximize2,
-  Minimize2
+  Minimize2,
+  Eye,
+  Sparkles,
+  X,
+  Beaker
 } from 'lucide-react';
 
 interface ProfessionalInterfaceV2Props {
@@ -37,17 +51,39 @@ interface WorkflowState {
   resultImage: string | null;
   prompt: string;
   roomDimensions?: { width: number; height: number; depth: number };
+  lightingCondition?: 'natural' | 'evening' | 'bright';
 }
 
 // Model configurations per scenario
 const scenarioModels: Record<ScenarioType, string[]> = {
-  'style-transfer': ['flux-redux-dev', 'flux-canny-pro'],
-  'empty-room': ['flux-depth-dev', 'flux-1.1-pro'],
-  'multi-reference': ['flux-redux-dev', 'flux-1.1-pro-ultra']
+  'style-transfer': ['interior-design', 'instant-id', 'flux-redux-dev', 'flux-canny-pro'],
+  'empty-room': ['flux-depth-dev', 'interior-design', 'flux-1.1-pro'],
+  'multi-reference': ['interior-design', 'instant-id', 'flux-redux-dev', 'flux-1.1-pro-ultra'],
+  'batch-processing': ['interior-design', 'flux-redux-dev', 'flux-canny-pro']
 };
 
 // Simplified model configurations for the UI
 const modelUIConfigs = {
+  'interior-design': {
+    name: 'Interior Design AI',
+    cost: 0.008,
+    type: 'interior-specialized',
+    parameters: {
+      guidance_scale: { min: 1, max: 20, default: 7.5, step: 0.5, label: 'Guidance' },
+      prompt_strength: { min: 0, max: 1, default: 0.8, step: 0.1, label: 'Strength' },
+      num_inference_steps: { min: 20, max: 50, default: 30, label: 'Steps' }
+    }
+  },
+  'instant-id': {
+    name: 'InstantID + IP-Adapter',
+    cost: 0.01,
+    type: 'ip-adapter',
+    parameters: {
+      ip_adapter_scale: { min: 0, max: 1, default: 0.8, step: 0.1, label: 'Style Strength' },
+      controlnet_conditioning_scale: { min: 0, max: 1, default: 0.8, step: 0.1, label: 'Structure' },
+      guidance_scale: { min: 1, max: 10, default: 5, step: 0.5, label: 'Guidance' }
+    }
+  },
   'flux-canny-pro': {
     name: 'FLUX Canny Pro',
     cost: MODEL_CONFIGS['flux-canny-pro'].costPerRun,
@@ -119,6 +155,8 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
     getCurrentImage 
   } = useImageHistory();
   
+  const progressTracker = useProgressTracker(initialScenario);
+  
   const [state, setState] = useState<WorkflowState>({
     scenario: initialScenario,
     selectedModel: scenarioModels[initialScenario][0],
@@ -137,6 +175,9 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [uploadedImages, setUploadedImages] = useState<Array<{ id: string; url: string; name: string }>>([]);
   const [showReferencePanel, setShowReferencePanel] = useState(true);
+  const [showPerspectiveGuides, setShowPerspectiveGuides] = useState(false);
+  const [showPresets, setShowPresets] = useState(true);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const handleScenarioChange = useCallback((scenario: ScenarioType) => {
     const availableModels = scenarioModels[scenario];
@@ -158,14 +199,22 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
       parameters: defaultParams,
       referenceImages: [] // Clear reference images when switching scenarios
     }));
-  }, []);
+    
+    // Reset progress tracker for new scenario
+    progressTracker.reset();
+  }, [progressTracker]);
 
   const handleParameterChange = useCallback((key: string, value: number | boolean) => {
     setState(prev => ({
       ...prev,
       parameters: { ...prev.parameters, [key]: value }
     }));
-  }, []);
+    
+    // If auto-generate is enabled (future feature), debounce the generation
+    // This prevents excessive API calls while user is adjusting sliders
+    const debounceKey = `param-change-${state.scenario}-${state.selectedModel}`;
+    requestDebouncer.cancel(debounceKey); // Cancel any pending auto-generation
+  }, [state.scenario, state.selectedModel]);
 
   const handleModelChange = useCallback((modelKey: string) => {
     const modelConfig = modelUIConfigs[modelKey as keyof typeof modelUIConfigs];
@@ -227,9 +276,55 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
       return;
     }
 
+    // Generate cache key
+    const cacheKey = imageCache.generateKey({
+      sourceImage: state.sourceImage,
+      prompt: state.prompt,
+      model: state.selectedModel,
+      parameters: state.parameters,
+      referenceImages: state.referenceImages.map(img => img.url)
+    });
+
+    // Check cache first
+    const cachedResult = imageCache.get(cacheKey);
+    if (cachedResult) {
+      setState(prev => ({ ...prev, resultImage: cachedResult }));
+      setToast({ 
+        message: 'Image retrieved from cache', 
+        type: 'info' 
+      });
+      return;
+    }
+
+    // Check if request was made very recently (prevent double-clicks)
+    if (imageCache.hasRecentRequest(cacheKey, 1000)) {
+      setToast({ 
+        message: 'Please wait - request already in progress', 
+        type: 'warning' 
+      });
+      return;
+    }
+
     setState(prev => ({ ...prev, isProcessing: true }));
+    progressTracker.reset();
+    
+    // Start progress tracking with detailed initial step
+    const startTime = Date.now();
+    if (progressTracker.steps.length > 0) {
+      progressTracker.steps[0].status = 'active';
+      progressTracker.steps[0].progress = 0;
+      progressTracker.steps[0].details = ['Validating inputs', 'Preparing request'];
+    }
     
     try {
+      // Initial processing step with progress updates
+      setTimeout(() => {
+        if (progressTracker.steps[0]) {
+          progressTracker.steps[0].progress = 50;
+          progressTracker.steps[0].details?.push('Input validation complete');
+        }
+      }, 100);
+      
       let endpoint = '/generate';
       let requestBody: any = {
         imageUrl: state.sourceImage,
@@ -246,11 +341,13 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
             sourceImage: state.sourceImage,
             referenceImage: state.referenceImages[0]?.url,
             scenario: state.scenario,
+            model: modelUIConfigs[state.selectedModel as keyof typeof modelUIConfigs].type,
             parameters: {
               ...state.parameters,
               prompt: state.prompt
             }
           };
+          progressTracker.steps[0].details?.push(`Using ${modelUIConfigs[state.selectedModel as keyof typeof modelUIConfigs].name} model`);
           break;
           
         case 'empty-room':
@@ -260,9 +357,12 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
             parameters: {
               ...state.parameters,
               prompt: state.prompt,
-              roomDimensions: state.roomDimensions
+              roomDimensions: state.roomDimensions,
+              lightingCondition: state.lightingCondition || 'natural'
             }
           };
+          progressTracker.steps[0].details?.push(`Room: ${state.roomDimensions?.width || 4}m × ${state.roomDimensions?.depth || 3}m`);
+          progressTracker.steps[0].details?.push(`Lighting: ${state.lightingCondition || 'natural'}`);
           break;
           
         case 'multi-reference':
@@ -275,14 +375,62 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
               prompt: state.prompt
             }
           };
+          progressTracker.steps[0].details?.push(`Processing ${state.referenceImages.length} reference images`);
           break;
       }
 
+      // Complete first step and move to API call
+      progressTracker.steps[0].progress = 100;
+      progressTracker.steps[0].duration = (Date.now() - startTime) / 1000;
+      progressTracker.nextStep();
+      
+      // Start API call step with progress simulation
+      const apiStartTime = Date.now();
+      if (progressTracker.steps[1]) {
+        progressTracker.steps[1].progress = 0;
+        progressTracker.steps[1].details = ['Sending request to API', 'Waiting for model initialization'];
+      }
+      
+      // Simulate progress during API call
+      const progressInterval = setInterval(() => {
+        if (progressTracker.steps[1] && progressTracker.steps[1].status === 'active') {
+          const currentProgress = progressTracker.steps[1].progress || 0;
+          if (currentProgress < 90) {
+            progressTracker.steps[1].progress = Math.min(currentProgress + 10, 90);
+            
+            // Add status updates based on progress
+            if (currentProgress === 20) {
+              progressTracker.steps[1].details?.push('Model loaded');
+            } else if (currentProgress === 50) {
+              progressTracker.steps[1].details?.push('Processing image');
+            } else if (currentProgress === 80) {
+              progressTracker.steps[1].details?.push('Finalizing generation');
+            }
+          }
+        }
+      }, 1000);
+      
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(requestBody)
       });
+      
+      // Clear interval and complete API step
+      clearInterval(progressInterval);
+      if (progressTracker.steps[1]) {
+        progressTracker.steps[1].progress = 100;
+        progressTracker.steps[1].duration = (Date.now() - apiStartTime) / 1000;
+        progressTracker.steps[1].details?.push('API call completed');
+      }
+      
+      // Move to processing step
+      progressTracker.nextStep();
+      const processingStartTime = Date.now();
+      if (progressTracker.steps[2]) {
+        progressTracker.steps[2].progress = 0;
+        progressTracker.steps[2].details = ['Parsing response', 'Validating output'];
+      }
 
       if (response.status === 429) {
         throw new Error("You've reached the daily limit. Please try again tomorrow.");
@@ -296,13 +444,43 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
       const result = await response.json();
       const imageUrl = result.finalImage || result.imageUrl || (typeof result === 'string' ? result : result[0]);
       
+      if (progressTracker.steps[2]) {
+        progressTracker.steps[2].progress = 50;
+        progressTracker.steps[2].details?.push('Image URL received');
+      }
+      
       setState(prev => ({ ...prev, resultImage: imageUrl }));
+      
+      // Cache the result
+      imageCache.set(cacheKey, imageUrl, {
+        model: state.selectedModel,
+        prompt: state.prompt,
+        parameters: state.parameters
+      });
       
       addToHistory({
         url: imageUrl,
         prompt: state.prompt,
         type: 'generated'
       });
+      
+      if (progressTracker.steps[2]) {
+        progressTracker.steps[2].progress = 100;
+        progressTracker.steps[2].duration = (Date.now() - processingStartTime) / 1000;
+        progressTracker.steps[2].details?.push('Image saved to history');
+      }
+      
+      // Complete final step
+      progressTracker.nextStep();
+      if (progressTracker.steps[3]) {
+        progressTracker.steps[3].duration = (Date.now() - startTime) / 1000;
+        progressTracker.steps[3].details = [
+          `Total time: ${((Date.now() - startTime) / 1000).toFixed(1)}s`,
+          `Model: ${modelUIConfigs[state.selectedModel as keyof typeof modelUIConfigs].name}`,
+          'Generation successful',
+          'Result cached for future use'
+        ];
+      }
       
       setToast({ 
         message: result.warning || 'Image generated successfully!', 
@@ -311,6 +489,7 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
       
     } catch (error) {
       console.error('Generation error:', error);
+      progressTracker.setError(error instanceof Error ? error.message : 'Generation failed');
       setToast({ 
         message: error instanceof Error ? error.message : 'Generation failed', 
         type: 'error' 
@@ -338,6 +517,26 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
     setState(prev => ({ ...prev, sourceImage: image.url }));
   }, []);
 
+  const handlePresetSelect = useCallback((preset: PresetTemplate) => {
+    // Apply preset parameters
+    setState(prev => ({
+      ...prev,
+      prompt: preset.prompt,
+      parameters: { ...prev.parameters, ...preset.parameters },
+      roomDimensions: preset.parameters.roomDimensions || prev.roomDimensions,
+      lightingCondition: preset.parameters.lightingCondition || prev.lightingCondition
+    }));
+    
+    // Show success toast
+    setToast({ 
+      message: `Applied "${preset.name}" template`, 
+      type: 'success' 
+    });
+    
+    // Optionally close presets panel after selection
+    setTimeout(() => setShowPresets(false), 1000);
+  }, []);
+
   const currentModel = modelUIConfigs[state.selectedModel as keyof typeof modelUIConfigs];
   const currentImage = getCurrentImage();
   const displayImage = state.resultImage || currentImage?.url;
@@ -352,31 +551,63 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
       />
       
       {/* Main Content Area */}
-      <div className="flex-1 flex">
-        <div className="flex-1 flex flex-col">
-          {/* Top Bar */}
-          <div className="border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <select 
-                value={state.selectedModel}
-                onChange={(e) => handleModelChange(e.target.value)}
-                className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-unoform-gold focus:border-transparent"
-              >
-                {availableModels.map(modelKey => {
-                  const config = modelUIConfigs[modelKey as keyof typeof modelUIConfigs];
-                  return config ? (
-                    <option key={modelKey} value={modelKey}>{config.name}</option>
-                  ) : null;
-                })}
-              </select>
-              
-              <div className="text-sm text-gray-600">
-                Cost: <span className="font-medium text-gray-900">${currentModel.cost}/image</span>
+      <ResizablePanelGroup direction="horizontal" className="flex-1">
+        {/* Left Panel - Preset Templates */}
+        {showPresets && (
+          <>
+            <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
+              <div className="h-full border-r border-gray-200 bg-gray-50 flex flex-col">
+                <div className="p-3 border-b border-gray-200 bg-white flex items-center justify-between">
+                  <h2 className="text-sm font-medium text-gray-900">Templates</h2>
+                  <button
+                    onClick={() => setShowPresets(false)}
+                    className="p-1 hover:bg-gray-100 rounded"
+                    title="Hide templates"
+                  >
+                    <Minimize2 className="h-4 w-4 text-gray-600" />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4">
+                  <PresetTemplates
+                    scenario={state.scenario}
+                    onSelect={handlePresetSelect}
+                  />
+                </div>
               </div>
+            </ResizablePanel>
+            <ResizableHandle withHandle />
+          </>
+        )}
+        
+        {/* Center Panel - Main Workspace */}
+        <ResizablePanel defaultSize={showPresets ? (showReferencePanel ? 55 : 80) : (showReferencePanel ? 75 : 100)} minSize={50}>
+          <div className="h-full flex flex-col">
+            {/* Top Bar */}
+            <div className="border-b border-gray-200 px-6 py-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <select 
+                    value={state.selectedModel}
+                    onChange={(e) => handleModelChange(e.target.value)}
+                    className="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:ring-2 focus:ring-unoform-gold focus:border-transparent"
+                  >
+                    {availableModels.map(modelKey => {
+                      const config = modelUIConfigs[modelKey as keyof typeof modelUIConfigs];
+                      return config ? (
+                        <option key={modelKey} value={modelKey}>{config.name}</option>
+                      ) : null;
+                    })}
+                  </select>
+                  
+                  <div className="text-sm text-gray-600">
+                    Model: <span className="font-medium text-gray-900">{currentModel.name}</span>
+                  </div>
 
-              {/* History Navigation */}
-              <div className="flex items-center gap-2 ml-4">
+                  {/* Cache Status */}
+                  <CacheStatus className="ml-4" />
+
+                  {/* History Navigation */}
+                  <div className="flex items-center gap-2 ml-4">
                 <button
                   onClick={handleUndo}
                   disabled={!canUndo}
@@ -397,39 +628,60 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
-            </div>
+                </div>
 
-            <div className="flex items-center gap-3">
-              {displayImage && (
-                <button
-                  onClick={() => downloadPhoto(displayImage, 'genai-kitchen-pro.jpg')}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                  title="Download result"
-                >
-                  <Download className="h-4 w-4" />
-                </button>
-              )}
-              
-              <button
-                onClick={handleGenerate}
-                disabled={state.isProcessing || !state.sourceImage}
-                className="px-4 py-2 bg-unoform-gold text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {state.isProcessing ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 animate-spin" />
-                    Processing...
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-4 w-4" />
-                    Generate
-                  </>
-                )}
-              </button>
+                <div className="flex items-center gap-3">
+                  {!showPresets && (
+                    <button
+                      onClick={() => setShowPresets(true)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Show templates"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </button>
+                  )}
+                  
+                  {displayImage && (
+                    <button
+                      onClick={() => setShowExportModal(true)}
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Export options"
+                    >
+                      <Download className="h-4 w-4" />
+                    </button>
+                  )}
+                  
+                  {/* Test Button - Only show in development */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <a
+                      href="/professional/test"
+                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      title="Test with Unoform catalog"
+                    >
+                      <Beaker className="h-4 w-4" />
+                    </a>
+                  )}
+                  
+                  <button
+                    onClick={handleGenerate}
+                    disabled={state.isProcessing || !state.sourceImage}
+                    className="px-4 py-2 bg-unoform-gold text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {state.isProcessing ? (
+                      <>
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-4 w-4" />
+                        Generate
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
 
         {/* Parameters Bar */}
         {currentModel.parameters && (
@@ -478,10 +730,137 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
           />
         </div>
 
+        {/* Room Dimensions for Empty Room Scenario */}
+        {state.scenario === 'empty-room' && (
+          <div className="px-6 py-3 border-b border-gray-200 bg-blue-50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-6">
+                <h3 className="text-sm font-medium text-gray-700">Room Dimensions:</h3>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Width (m)</label>
+                  <input
+                    type="number"
+                    min="2"
+                    max="10"
+                    step="0.1"
+                    value={state.roomDimensions?.width || 4}
+                    onChange={(e) => setState(prev => ({
+                      ...prev,
+                      roomDimensions: {
+                        ...prev.roomDimensions,
+                        width: parseFloat(e.target.value) || 4,
+                        height: prev.roomDimensions?.height || 2.5,
+                        depth: prev.roomDimensions?.depth || 3
+                      }
+                    }))}
+                    className="w-20 px-2 py-1 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-unoform-gold focus:border-transparent"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Height (m)</label>
+                  <input
+                    type="number"
+                    min="2"
+                    max="4"
+                    step="0.1"
+                    value={state.roomDimensions?.height || 2.5}
+                    onChange={(e) => setState(prev => ({
+                      ...prev,
+                      roomDimensions: {
+                        ...prev.roomDimensions,
+                        width: prev.roomDimensions?.width || 4,
+                        height: parseFloat(e.target.value) || 2.5,
+                        depth: prev.roomDimensions?.depth || 3
+                      }
+                    }))}
+                    className="w-20 px-2 py-1 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-unoform-gold focus:border-transparent"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Depth (m)</label>
+                  <input
+                    type="number"
+                    min="2"
+                    max="10"
+                    step="0.1"
+                    value={state.roomDimensions?.depth || 3}
+                    onChange={(e) => setState(prev => ({
+                      ...prev,
+                      roomDimensions: {
+                        ...prev.roomDimensions,
+                        width: prev.roomDimensions?.width || 4,
+                        height: prev.roomDimensions?.height || 2.5,
+                        depth: parseFloat(e.target.value) || 3
+                      }
+                    }))}
+                    className="w-20 px-2 py-1 text-sm border border-gray-200 rounded focus:ring-2 focus:ring-unoform-gold focus:border-transparent"
+                  />
+                </div>
+                <div className="text-sm text-gray-600">
+                  Area: {((state.roomDimensions?.width || 4) * (state.roomDimensions?.depth || 3)).toFixed(1)} m²
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-gray-600">Lighting:</label>
+                  <select 
+                    value={state.lightingCondition || 'natural'}
+                    onChange={(e) => setState(prev => ({ 
+                      ...prev, 
+                      lightingCondition: e.target.value as 'natural' | 'evening' | 'bright' 
+                    }))}
+                    className="text-sm border border-gray-200 rounded px-2 py-1 focus:ring-2 focus:ring-unoform-gold focus:border-transparent"
+                  >
+                    <option value="natural">Natural Daylight</option>
+                    <option value="evening">Evening Ambient</option>
+                    <option value="bright">Bright Studio</option>
+                  </select>
+                </div>
+                
+                <button
+                  onClick={() => setShowPerspectiveGuides(!showPerspectiveGuides)}
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                    showPerspectiveGuides 
+                      ? 'bg-unoform-gold text-white' 
+                      : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  <Eye className="h-4 w-4" />
+                  Perspective Guides
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Canvas Area */}
         <div className="flex-1 p-6 overflow-auto">
           <div className="max-w-6xl mx-auto">
-            {displayImage && state.sourceImage ? (
+            {/* Progress Tracker - Show when processing */}
+            {state.isProcessing && (
+              <div className="mb-6">
+                <ProgressTracker 
+                  steps={progressTracker.steps} 
+                  currentStep={progressTracker.currentStep}
+                />
+              </div>
+            )}
+            
+            {state.scenario === 'batch-processing' ? (
+              <BatchProcessing
+                styleReference={state.referenceImages[0]?.url}
+                prompt={state.prompt}
+                parameters={state.parameters}
+                setToast={setToast}
+                onComplete={(results) => {
+                  setToast({ 
+                    message: `Batch processing complete! ${results.length} images processed.`, 
+                    type: 'success' 
+                  });
+                }}
+              />
+            ) : displayImage && state.sourceImage ? (
               <CompareSlider
                 original={state.sourceImage}
                 restored={displayImage}
@@ -491,9 +870,18 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
                 {/* Source Image */}
                 <div>
                   <h3 className="text-sm font-medium text-gray-700 mb-3">Source Image</h3>
-                  <div className="aspect-video bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                  <div className="relative aspect-video bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
                     {state.sourceImage ? (
-                      <img src={state.sourceImage} alt="Source" className="w-full h-full object-cover" />
+                      <>
+                        <img src={state.sourceImage} alt="Source" className="w-full h-full object-cover" />
+                        {state.scenario === 'empty-room' && (
+                          <PerspectiveGuides
+                            imageUrl={state.sourceImage}
+                            visible={showPerspectiveGuides}
+                            onToggle={() => setShowPerspectiveGuides(false)}
+                          />
+                        )}
+                      </>
                     ) : (
                       <UploadDropzone
                         options={uploadOptions}
@@ -526,10 +914,14 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
             )}
           </div>
         </div>
+      </div>
+    </ResizablePanel>
 
         {/* Right Panel - Reference Images or Recent Uploads */}
-        {(state.scenario === 'style-transfer' || state.scenario === 'multi-reference') && showReferencePanel ? (
-          <div className="w-96 border-l border-gray-200 bg-gray-50 flex flex-col">
+        <ResizableHandle withHandle />
+        <ResizablePanel defaultSize={showReferencePanel ? 25 : 20} minSize={15} maxSize={40}>
+          {(state.scenario === 'style-transfer' || state.scenario === 'multi-reference') && showReferencePanel ? (
+          <div className="h-full border-l border-gray-200 bg-gray-50 flex flex-col">
             <div className="p-3 border-b border-gray-200 bg-white flex items-center justify-between">
               <h2 className="text-sm font-medium text-gray-900">Reference Manager</h2>
               <button
@@ -540,17 +932,27 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
                 <Minimize2 className="h-4 w-4 text-gray-600" />
               </button>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 flex flex-col">
               <ReferenceImageManager
                 scenario={state.scenario}
                 maxImages={state.scenario === 'style-transfer' ? 1 : 3}
                 images={state.referenceImages}
                 onImagesChange={(images) => setState(prev => ({ ...prev, referenceImages: images }))}
               />
+              
+              {/* Cost Estimator */}
+              <div className="p-4 border-t border-gray-200">
+                <CostEstimator
+                  scenario={state.scenario}
+                  selectedModel={state.selectedModel}
+                  referenceCount={state.scenario === 'multi-reference' ? state.referenceImages.length : 1}
+                  isProcessing={state.isProcessing}
+                />
+              </div>
             </div>
           </div>
         ) : (
-          <div className="w-80 border-l border-gray-200 bg-gray-50">
+          <div className="h-full border-l border-gray-200 bg-gray-50 flex flex-col">
             <div className="p-4 border-b border-gray-200 bg-white">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-medium text-gray-900">Recent Uploads</h2>
@@ -617,10 +1019,20 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
                 </div>
               )}
             </div>
+            
+            {/* Cost Estimator in Recent Uploads View */}
+            <div className="p-4 border-t border-gray-200 mt-auto">
+              <CostEstimator
+                scenario={state.scenario}
+                selectedModel={state.selectedModel}
+                referenceCount={state.scenario === 'multi-reference' ? state.referenceImages.length : 1}
+                isProcessing={state.isProcessing}
+              />
+            </div>
           </div>
         )}
-      </div>
-      </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
 
       {/* Toast Notification */}
       {toast && (
@@ -629,6 +1041,49 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
           type={toast.type}
           onClose={() => setToast(null)}
         />
+      )}
+      
+      {/* Export Modal */}
+      {showExportModal && displayImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-lg font-medium text-gray-900">Export Your Design</h2>
+              <button
+                onClick={() => setShowExportModal(false)}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <X className="h-5 w-5 text-gray-500" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
+              <ExportTemplates
+                data={{
+                  sourceImage: state.sourceImage || undefined,
+                  resultImage: displayImage,
+                  scenario: state.scenario,
+                  model: state.selectedModel,
+                  parameters: state.parameters,
+                  prompt: state.prompt,
+                  timestamp: new Date(),
+                  cost: currentModel.cost,
+                  processingTime: progressTracker.steps[3]?.duration,
+                  referenceImages: state.referenceImages.map(img => ({
+                    url: img.url,
+                    role: img.role
+                  }))
+                }}
+                onExport={(template) => {
+                  setToast({
+                    message: `${template.name} exported successfully`,
+                    type: 'success'
+                  });
+                }}
+              />
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -1,8 +1,6 @@
 'use client';
 
 import React, { useState, useCallback } from 'react';
-import { UploadDropzone } from '@bytescale/upload-widget-react';
-import { UploadWidgetConfig } from '@bytescale/upload-widget';
 import { useImageHistory } from '@/hooks/useImageHistory';
 import downloadPhoto from '@/utils/downloadPhoto';
 import { imageCache } from '@/utils/imageCache';
@@ -11,30 +9,22 @@ import { CompareSlider } from '@/components/CompareSlider';
 import Toast from '@/components/Toast';
 import { MODEL_CONFIGS } from '@/constants/models';
 import { ScenarioSelector, ScenarioType } from './ScenarioSelector';
-import { ReferenceImageManager, ReferenceImage } from './ReferenceImageManager';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '../ui/resizable';
 import { ProgressTracker, useProgressTracker } from './ProgressTracker';
 import { PerspectiveGuides } from './PerspectiveGuides';
 import { CostEstimator } from './CostEstimator';
-import { PresetTemplates, PresetTemplate } from './PresetTemplates';
-import { ExportTemplates, ExportData } from './ExportTemplates';
 import { CacheStatus } from './CacheStatus';
 import BatchProcessing from './BatchProcessing';
+import { UnifiedImageLibrary } from './UnifiedImageLibrary';
 import { 
   Play,
-  Download,
   ChevronLeft,
   ChevronRight,
   RefreshCw,
-  Upload as UploadIcon,
-  Grid3x3,
-  List,
-  Maximize2,
-  Minimize2,
   Eye,
-  Sparkles,
-  X,
-  Beaker
+  Beaker,
+  Image as ImageIcon,
+  Sparkles
 } from 'lucide-react';
 
 interface ProfessionalInterfaceV2Props {
@@ -46,7 +36,12 @@ interface WorkflowState {
   selectedModel: string;
   parameters: Record<string, any>;
   sourceImage: string | null;
-  referenceImages: ReferenceImage[];
+  referenceImages: Array<{
+    id: string;
+    url: string;
+    name: string;
+    role?: 'source' | 'reference' | 'result';
+  }>;
   isProcessing: boolean;
   resultImage: string | null;
   prompt: string;
@@ -56,17 +51,32 @@ interface WorkflowState {
 
 // Model configurations per scenario
 const scenarioModels: Record<ScenarioType, string[]> = {
-  'style-transfer': ['interior-design', 'instant-id', 'flux-redux-dev', 'flux-canny-pro'],
-  'empty-room': ['flux-depth-dev', 'interior-design', 'flux-1.1-pro'],
-  'multi-reference': ['interior-design', 'instant-id', 'flux-redux-dev', 'flux-1.1-pro-ultra'],
-  'batch-processing': ['interior-design', 'flux-redux-dev', 'flux-canny-pro']
+  'style-transfer': ['fofr-style-transfer', 'flux-canny-pro'],
+  'empty-room': ['interior-design', 'flux-canny-pro', 'flux-1.1-pro'],
+  'multi-reference': ['fofr-style-transfer', 'flux-fill-pro', 'flux-1.1-pro-ultra'],
+  'batch-processing': ['fofr-style-transfer', 'flux-canny-pro']
 };
 
 // Simplified model configurations for the UI
 const modelUIConfigs = {
+  'fofr-style-transfer': {
+    name: 'Style Transfer Pro',
+    cost: 0.003,
+    type: 'style-transfer',
+    parameters: {
+      style_model: { 
+        type: 'select',
+        options: ['fast', 'realistic', 'high-quality', 'cinematic', 'animated'],
+        default: 'realistic',
+        label: 'Style Model'
+      },
+      structure_depth_strength: { min: 0, max: 1, default: 0.8, step: 0.1, label: 'Structure Preservation' },
+      denoising_strength: { min: 0, max: 1, default: 0.75, step: 0.05, label: 'Style Intensity' }
+    }
+  },
   'interior-design': {
     name: 'Interior Design AI',
-    cost: 0.008,
+    cost: 0.006,
     type: 'interior-specialized',
     parameters: {
       guidance_scale: { min: 1, max: 20, default: 7.5, step: 0.5, label: 'Guidance' },
@@ -74,14 +84,14 @@ const modelUIConfigs = {
       num_inference_steps: { min: 20, max: 50, default: 30, label: 'Steps' }
     }
   },
-  'instant-id': {
-    name: 'InstantID + IP-Adapter',
-    cost: 0.01,
-    type: 'ip-adapter',
+  'flux-fill-pro': {
+    name: 'FLUX Fill Pro',
+    cost: MODEL_CONFIGS['flux-fill-pro'].costPerRun,
+    type: 'inpainting',
     parameters: {
-      ip_adapter_scale: { min: 0, max: 1, default: 0.8, step: 0.1, label: 'Style Strength' },
-      controlnet_conditioning_scale: { min: 0, max: 1, default: 0.8, step: 0.1, label: 'Structure' },
-      guidance_scale: { min: 1, max: 10, default: 5, step: 0.5, label: 'Guidance' }
+      steps: { min: 15, max: 50, default: 50, label: 'Quality' },
+      guidance: { min: 1.5, max: 10, default: 3.5, step: 0.5, label: 'Guidance' },
+      prompt_upsampling: { type: 'checkbox', default: true, label: 'Enhance Prompt' }
     }
   },
   'flux-canny-pro': {
@@ -102,24 +112,6 @@ const modelUIConfigs = {
       height: { min: 256, max: 1440, default: 768, step: 32, label: 'Height' }
     }
   },
-  'flux-redux-dev': {
-    name: 'FLUX Redux',
-    cost: MODEL_CONFIGS['flux-redux-dev'].costPerRun,
-    type: 'style-transfer',
-    parameters: {
-      guidance: { min: 0, max: 10, default: 3, step: 0.5, label: 'Style Strength' },
-      num_inference_steps: { min: 1, max: 50, default: 28, label: 'Steps' }
-    }
-  },
-  'flux-depth-dev': {
-    name: 'FLUX Depth',
-    cost: MODEL_CONFIGS['flux-depth-dev'].costPerRun,
-    type: 'depth',
-    parameters: {
-      guidance_scale: { min: 1, max: 10, default: 3.5, step: 0.5, label: 'Guidance' },
-      num_inference_steps: { min: 1, max: 50, default: 28, label: 'Steps' }
-    }
-  },
   'flux-1.1-pro-ultra': {
     name: 'FLUX Pro Ultra',
     cost: MODEL_CONFIGS['flux-1.1-pro-ultra'].costPerRun,
@@ -131,17 +123,6 @@ const modelUIConfigs = {
   }
 };
 
-// Upload widget configuration
-const uploadOptions: UploadWidgetConfig = {
-  apiKey: process.env.NEXT_PUBLIC_UPLOAD_API_KEY || "free",
-  maxFileCount: 1,
-  mimeTypes: ["image/jpeg", "image/png", "image/jpg"],
-  styles: {
-    colors: {
-      primary: "#C19A5B"
-    }
-  }
-};
 
 export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: ProfessionalInterfaceV2Props) {
   const { 
@@ -172,12 +153,7 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
   });
 
   const [toast, setToast] = useState<{ message: string; type: 'info' | 'success' | 'warning' | 'error' } | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [uploadedImages, setUploadedImages] = useState<Array<{ id: string; url: string; name: string }>>([]);
-  const [showReferencePanel, setShowReferencePanel] = useState(true);
   const [showPerspectiveGuides, setShowPerspectiveGuides] = useState(false);
-  const [showPresets, setShowPresets] = useState(true);
-  const [showExportModal, setShowExportModal] = useState(false);
 
   const handleScenarioChange = useCallback((scenario: ScenarioType) => {
     const availableModels = scenarioModels[scenario];
@@ -234,30 +210,6 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
     }
   }, []);
 
-  const handleImageUpload = useCallback((uploadedFiles: any[]) => {
-    if (uploadedFiles.length > 0) {
-      const file = uploadedFiles[0];
-      const imageUrl = file.fileUrl;
-      const imageName = file.originalFileName || 'Uploaded image';
-      
-      setState(prev => ({ ...prev, sourceImage: imageUrl }));
-      
-      // Add to uploaded images list
-      setUploadedImages(prev => [...prev, {
-        id: `img-${Date.now()}`,
-        url: imageUrl,
-        name: imageName
-      }]);
-      
-      // Add to history
-      addToHistory({
-        url: imageUrl,
-        type: 'original'
-      });
-      
-      setToast({ message: 'Image uploaded successfully', type: 'success' });
-    }
-  }, [addToHistory]);
 
   const handleGenerate = async () => {
     if (!state.sourceImage) {
@@ -341,7 +293,7 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
             sourceImage: state.sourceImage,
             referenceImage: state.referenceImages[0]?.url,
             scenario: state.scenario,
-            model: modelUIConfigs[state.selectedModel as keyof typeof modelUIConfigs].type,
+            model: state.selectedModel, // Use the model key directly
             parameters: {
               ...state.parameters,
               prompt: state.prompt
@@ -513,29 +465,6 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
     }
   }, [redo]);
 
-  const handleImageSelect = useCallback((image: { url: string }) => {
-    setState(prev => ({ ...prev, sourceImage: image.url }));
-  }, []);
-
-  const handlePresetSelect = useCallback((preset: PresetTemplate) => {
-    // Apply preset parameters
-    setState(prev => ({
-      ...prev,
-      prompt: preset.prompt,
-      parameters: { ...prev.parameters, ...preset.parameters },
-      roomDimensions: preset.parameters.roomDimensions || prev.roomDimensions,
-      lightingCondition: preset.parameters.lightingCondition || prev.lightingCondition
-    }));
-    
-    // Show success toast
-    setToast({ 
-      message: `Applied "${preset.name}" template`, 
-      type: 'success' 
-    });
-    
-    // Optionally close presets panel after selection
-    setTimeout(() => setShowPresets(false), 1000);
-  }, []);
 
   const currentModel = modelUIConfigs[state.selectedModel as keyof typeof modelUIConfigs];
   const currentImage = getCurrentImage();
@@ -552,35 +481,8 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
       
       {/* Main Content Area */}
       <ResizablePanelGroup direction="horizontal" className="flex-1">
-        {/* Left Panel - Preset Templates */}
-        {showPresets && (
-          <>
-            <ResizablePanel defaultSize={20} minSize={15} maxSize={30}>
-              <div className="h-full border-r border-gray-200 bg-gray-50 flex flex-col">
-                <div className="p-3 border-b border-gray-200 bg-white flex items-center justify-between">
-                  <h2 className="text-sm font-medium text-gray-900">Templates</h2>
-                  <button
-                    onClick={() => setShowPresets(false)}
-                    className="p-1 hover:bg-gray-100 rounded"
-                    title="Hide templates"
-                  >
-                    <Minimize2 className="h-4 w-4 text-gray-600" />
-                  </button>
-                </div>
-                <div className="flex-1 overflow-y-auto p-4">
-                  <PresetTemplates
-                    scenario={state.scenario}
-                    onSelect={handlePresetSelect}
-                  />
-                </div>
-              </div>
-            </ResizablePanel>
-            <ResizableHandle withHandle />
-          </>
-        )}
-        
         {/* Center Panel - Main Workspace */}
-        <ResizablePanel defaultSize={showPresets ? (showReferencePanel ? 55 : 80) : (showReferencePanel ? 75 : 100)} minSize={50}>
+        <ResizablePanel defaultSize={75} minSize={50}>
           <div className="h-full flex flex-col">
             {/* Top Bar */}
             <div className="border-b border-gray-200 px-6 py-4">
@@ -631,25 +533,6 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {!showPresets && (
-                    <button
-                      onClick={() => setShowPresets(true)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                      title="Show templates"
-                    >
-                      <Sparkles className="h-4 w-4" />
-                    </button>
-                  )}
-                  
-                  {displayImage && (
-                    <button
-                      onClick={() => setShowExportModal(true)}
-                      className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                      title="Export options"
-                    >
-                      <Download className="h-4 w-4" />
-                    </button>
-                  )}
                   
                   {/* Test Button - Only show in development */}
                   {process.env.NODE_ENV === 'development' && (
@@ -883,16 +766,11 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
                         )}
                       </>
                     ) : (
-                      <UploadDropzone
-                        options={uploadOptions}
-                        onUpdate={({ uploadedFiles }) => {
-                          if (uploadedFiles.length > 0) {
-                            handleImageUpload(uploadedFiles);
-                          }
-                        }}
-                        height="100%"
-                        width="100%"
-                      />
+                      <div className="text-center text-gray-500 p-8">
+                        <ImageIcon className="mx-auto h-12 w-12 mb-3 text-gray-400" />
+                        <p className="text-sm font-medium">No source image selected</p>
+                        <p className="text-xs mt-1">Select an image from the library</p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -904,8 +782,10 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
                     {displayImage ? (
                       <img src={displayImage} alt="Result" className="w-full h-full object-cover" />
                     ) : (
-                      <div className="text-center text-gray-500">
-                        <p className="text-sm">Result will appear here</p>
+                      <div className="text-center text-gray-500 p-8">
+                        <Sparkles className="mx-auto h-12 w-12 mb-3 text-gray-400" />
+                        <p className="text-sm font-medium">Result will appear here</p>
+                        <p className="text-xs mt-1">Click generate to start</p>
                       </div>
                     )}
                   </div>
@@ -917,111 +797,31 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
       </div>
     </ResizablePanel>
 
-        {/* Right Panel - Reference Images or Recent Uploads */}
+        {/* Right Panel - Unified Image Library */}
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={showReferencePanel ? 25 : 20} minSize={15} maxSize={40}>
-          {(state.scenario === 'style-transfer' || state.scenario === 'multi-reference') && showReferencePanel ? (
-          <div className="h-full border-l border-gray-200 bg-gray-50 flex flex-col">
-            <div className="p-3 border-b border-gray-200 bg-white flex items-center justify-between">
-              <h2 className="text-sm font-medium text-gray-900">Reference Manager</h2>
-              <button
-                onClick={() => setShowReferencePanel(false)}
-                className="p-1 hover:bg-gray-100 rounded"
-                title="Hide reference panel"
-              >
-                <Minimize2 className="h-4 w-4 text-gray-600" />
-              </button>
-            </div>
-            <div className="flex-1 flex flex-col">
-              <ReferenceImageManager
-                scenario={state.scenario}
-                maxImages={state.scenario === 'style-transfer' ? 1 : 3}
-                images={state.referenceImages}
-                onImagesChange={(images) => setState(prev => ({ ...prev, referenceImages: images }))}
-              />
-              
-              {/* Cost Estimator */}
-              <div className="p-4 border-t border-gray-200">
-                <CostEstimator
-                  scenario={state.scenario}
-                  selectedModel={state.selectedModel}
-                  referenceCount={state.scenario === 'multi-reference' ? state.referenceImages.length : 1}
-                  isProcessing={state.isProcessing}
-                />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="h-full border-l border-gray-200 bg-gray-50 flex flex-col">
-            <div className="p-4 border-b border-gray-200 bg-white">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-medium text-gray-900">Recent Uploads</h2>
-                <div className="flex items-center gap-2">
-                  {(state.scenario === 'style-transfer' || state.scenario === 'multi-reference') && !showReferencePanel && (
-                    <button
-                      onClick={() => setShowReferencePanel(true)}
-                      className="p-1.5 hover:bg-gray-100 rounded"
-                      title="Show reference panel"
-                    >
-                      <Maximize2 className="h-4 w-4 text-gray-600" />
-                    </button>
-                  )}
-                  <button
-                    onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                    className="p-1.5 hover:bg-gray-100 rounded"
-                    title={`Switch to ${viewMode === 'grid' ? 'list' : 'grid'} view`}
-                  >
-                    {viewMode === 'grid' ? <List className="h-4 w-4 text-gray-600" /> : <Grid3x3 className="h-4 w-4 text-gray-600" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-4 overflow-y-auto h-[calc(100%-60px)]">
-              {uploadedImages.length === 0 ? (
-                <div className="text-center py-8">
-                  <UploadIcon className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                  <p className="text-sm text-gray-600">No images uploaded yet</p>
-                </div>
-              ) : viewMode === 'grid' ? (
-                <div className="grid grid-cols-2 gap-3">
-                  {uploadedImages.map(img => (
-                    <button
-                      key={img.id}
-                      onClick={() => handleImageSelect(img)}
-                      className={`aspect-video bg-gray-200 rounded hover:ring-2 hover:ring-unoform-gold transition-all overflow-hidden ${
-                        state.sourceImage === img.url ? 'ring-2 ring-unoform-gold' : ''
-                      }`}
-                    >
-                      <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-2">
-                  {uploadedImages.map(img => (
-                    <button
-                      key={img.id}
-                      onClick={() => handleImageSelect(img)}
-                      className={`w-full flex items-center gap-3 p-2 hover:bg-white rounded transition-colors ${
-                        state.sourceImage === img.url ? 'bg-white ring-1 ring-unoform-gold' : ''
-                      }`}
-                    >
-                      <div className="w-16 h-12 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                        <img src={img.url} alt={img.name} className="w-full h-full object-cover" />
-                      </div>
-                      <div className="text-left">
-                        <p className="text-sm font-medium text-gray-900 truncate">{img.name}</p>
-                        <p className="text-xs text-gray-500">1344 × 768</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+        <ResizablePanel defaultSize={25} minSize={20} maxSize={40}>
+          <div className="h-full flex flex-col">
+            <UnifiedImageLibrary
+              scenario={state.scenario}
+              onSourceSelect={(image) => {
+                if (image) {
+                  setState(prev => ({ ...prev, sourceImage: image.url }));
+                  addToHistory({
+                    url: image.url,
+                    type: 'original'
+                  });
+                } else {
+                  setState(prev => ({ ...prev, sourceImage: null }));
+                }
+              }}
+              onReferenceSelect={(images) => {
+                setState(prev => ({ ...prev, referenceImages: images }));
+              }}
+              maxReferenceImages={state.scenario === 'multi-reference' ? 3 : 1}
+            />
             
-            {/* Cost Estimator in Recent Uploads View */}
-            <div className="p-4 border-t border-gray-200 mt-auto">
+            {/* Cost Estimator */}
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
               <CostEstimator
                 scenario={state.scenario}
                 selectedModel={state.selectedModel}
@@ -1030,7 +830,6 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
               />
             </div>
           </div>
-        )}
         </ResizablePanel>
       </ResizablePanelGroup>
 
@@ -1043,48 +842,6 @@ export function ProfessionalInterfaceV2({ initialScenario = 'style-transfer' }: 
         />
       )}
       
-      {/* Export Modal */}
-      {showExportModal && displayImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
-            <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-900">Export Your Design</h2>
-              <button
-                onClick={() => setShowExportModal(false)}
-                className="p-1 hover:bg-gray-100 rounded"
-              >
-                <X className="h-5 w-5 text-gray-500" />
-              </button>
-            </div>
-            
-            <div className="p-6 overflow-y-auto max-h-[calc(90vh-80px)]">
-              <ExportTemplates
-                data={{
-                  sourceImage: state.sourceImage || undefined,
-                  resultImage: displayImage,
-                  scenario: state.scenario,
-                  model: state.selectedModel,
-                  parameters: state.parameters,
-                  prompt: state.prompt,
-                  timestamp: new Date(),
-                  cost: currentModel.cost,
-                  processingTime: progressTracker.steps[3]?.duration,
-                  referenceImages: state.referenceImages.map(img => ({
-                    url: img.url,
-                    role: img.role
-                  }))
-                }}
-                onExport={(template) => {
-                  setToast({
-                    message: `${template.name} exported successfully`,
-                    type: 'success'
-                  });
-                }}
-              />
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

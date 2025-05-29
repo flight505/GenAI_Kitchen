@@ -57,7 +57,7 @@ export function StyleTransferTest() {
       catalogImage: selectedCatalog,
       customerImage,
       status: 'processing',
-      model: 'interior-design'
+      model: 'fofr/style-transfer'
     };
     
     setTestResults(prev => [newTest, ...prev]);
@@ -71,12 +71,15 @@ export function StyleTransferTest() {
           sourceImage: customerImage,
           referenceImage: selectedCatalog.url,
           scenario: 'style-transfer',
-          model: 'interior-specialized',
+          model: 'fofr-style-transfer',
           parameters: {
-            prompt: `Transform this kitchen to match the ${selectedCatalog.name} style from Unoform catalog. Apply ${selectedCatalog.materials.join(', ')} materials and ${selectedCatalog.description}. Maintain the original kitchen layout and structure.`,
-            guidance_scale: 7.5,
-            prompt_strength: 0.8,
-            num_inference_steps: 30
+            prompt: `Modern Scandinavian kitchen with ${selectedCatalog.name} style, featuring ${selectedCatalog.materials.join(', ')} materials`,
+            negative_prompt: 'blurry, low quality, distorted, cartoon, anime, unrealistic',
+            style_model: 'realistic', // Options: fast, high-quality, realistic, cinematic, animated
+            structure_depth_strength: 0.8, // How much to preserve original structure
+            denoising_strength: 0.75, // Balance between style and structure
+            width: 1344,
+            height: 768
           }
         })
       });

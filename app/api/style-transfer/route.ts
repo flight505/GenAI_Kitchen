@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       referenceImage,
       scenario,
       parameters,
-      model = 'flux-redux-dev' // Default to Redux if not specified
+      model = 'fofr-style-transfer' // Default to fofr/style-transfer
     } = body;
 
     // Validate required fields
@@ -73,63 +73,50 @@ export async function POST(request: Request) {
 
     // Handle different models
     switch (model) {
-      case 'interior-design':
-      case 'interior-specialized': {
-        // Adirik's interior design model
-        const input = {
-          image: sourceImage,
-          prompt: prompt || buildStyleTransferPrompt(referenceImage, parameters),
-          negative_prompt: parameters?.negative_prompt || '',
-          guidance_scale: parameters?.guidance_scale || 7.5,
-          prompt_strength: parameters?.prompt_strength || 0.8,
-          num_inference_steps: parameters?.num_inference_steps || 30,
-          seed: parameters?.seed || -1
-        };
-
-        console.log('Using Interior Design model:', input);
-        output = await replicate.run('adirik/interior-design:76604baddc85b1b4616e1c6475eca080da339c8875bd4996705440484a6cac81', { input });
-        break;
-      }
-
-      case 'instant-id':
-      case 'ip-adapter': {
-        // InstantID with IP-Adapter
-        const input = {
-          image: sourceImage,
-          prompt: prompt || buildStyleTransferPrompt(referenceImage, parameters),
-          negative_prompt: parameters?.negative_prompt || '',
-          ip_adapter_scale: parameters?.ip_adapter_scale || 0.8,
-          controlnet_conditioning_scale: parameters?.controlnet_conditioning_scale || 0.8,
-          guidance_scale: parameters?.guidance_scale || 5,
-          num_inference_steps: parameters?.num_inference_steps || 30
-        };
-
-        console.log('Using InstantID model:', input);
-        output = await replicate.run('zsxkib/instant-id:592677175e5d148bec0e320dd06418b64fd1f9050ad9dc01320284a6df2154f4', { input });
-        break;
-      }
-
-      case 'flux-redux-dev':
+      case 'fofr-style-transfer':
       case 'style-transfer':
       default: {
-        // Default Redux model
-        const transferPrompt = buildStyleTransferPrompt(referenceImage, parameters);
+        // fofr/style-transfer model - the correct model for style transfer
         const input = {
-          image: sourceImage,
-          prompt: transferPrompt,
-          guidance_scale: parameters?.guidance || 3.5,
-          num_outputs: 1,
-          output_format: 'webp',
-          output_quality: 80,
-          num_inference_steps: parameters?.num_inference_steps || 28
+          style_image: referenceImage, // The reference image to copy style from
+          structure_image: sourceImage, // The customer's kitchen to apply style to
+          prompt: prompt || 'A modern Scandinavian kitchen with minimalist design',
+          negative_prompt: parameters?.negative_prompt || 'blurry, low quality, distorted, cartoon, anime',
+          width: parameters?.width || 1344, // 16:9 aspect ratio
+          height: parameters?.height || 768,
+          model: parameters?.style_model || 'realistic', // Options: fast, high-quality, realistic, cinematic, animated
+          number_of_images: 1,
+          seed: parameters?.seed || null,
+          structure_depth_strength: parameters?.structure_depth_strength || 0.8, // How much to preserve original structure
+          denoising_strength: parameters?.denoising_strength || 0.75, // Balance between style and structure
         };
 
-        console.log('Using Redux model:', input);
+        console.log('Using fofr style-transfer model:', input);
         output = await replicate.run(
-          'black-forest-labs/flux-redux-dev:96b56814e57dfa601f3f524f82a2b336ef49012cda68828cb37cde66f481b7cb',
+          'fofr/style-transfer:f1023890703bc0a5a3a2c21b5e498833be5f6ef6e70e9daf6b9b3a4fd8309cf0',
           { input }
         );
-        prompt = transferPrompt;
+        break;
+      }
+
+      case 'flux-canny-pro': {
+        // Alternative: FLUX Canny Pro for edge-preserving style transfer
+        const input = {
+          control_image: sourceImage,
+          prompt: prompt || buildStyleTransferPrompt(referenceImage, parameters),
+          guidance_scale: parameters?.guidance_scale || 3.5,
+          num_outputs: 1,
+          output_format: 'webp',
+          output_quality: 90,
+          num_inference_steps: parameters?.num_inference_steps || 28,
+          controlnet_conditioning_scale: parameters?.controlnet_conditioning_scale || 0.8
+        };
+
+        console.log('Using FLUX Canny Pro model:', input);
+        output = await replicate.run(
+          'black-forest-labs/flux-canny-pro:3e03126bd3fbb9349783930f4139eb6c488aef2197c4d3fd2a826b35ccecea3d',
+          { input }
+        );
         break;
       }
     }

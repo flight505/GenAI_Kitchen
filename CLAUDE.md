@@ -216,8 +216,8 @@ NEXT_PUBLIC_UPLOAD_API_KEY= # Bytescale widget key
 #### Phase 2: Advanced Scenarios - IN PROGRESS
 **Completed:**
 - ✅ All three API routes implemented:
-  - `/api/style-transfer` - Style transfer endpoint with Redux model support
-  - `/api/empty-room` - Empty room projection with Flux Depth Dev
+  - `/api/style-transfer` - Style transfer endpoint with fofr/style-transfer model
+  - `/api/empty-room` - Empty room projection with Interior Design AI (adirik)
   - `/api/multi-reference` - Sequential multi-image composition
 - ✅ StyleTransferPanel component created and integrated in RefineTabV2
 - ✅ StyleTransferShowcase component for UI examples

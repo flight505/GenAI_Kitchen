@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
     // Build prompt for empty room projection
     const prompt = buildEmptyRoomPrompt(parameters);
 
-    // Use FLUX Depth for perspective-aware generation
-    const model = 'black-forest-labs/flux-depth-dev:97c293b16e4e42a3a5aae4d9b1cbdfacb99dca63d6c6a0e87810daef1ee37e72';
+    // Use FLUX Canny for structure-aware generation
+    const model = 'black-forest-labs/flux-canny-pro:3e03126bd3fbb9349783930f4139eb6c488aef2197c4d3fd2a826b35ccecea3d';
     
     const input = {
       control_image: emptyRoom,

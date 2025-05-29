@@ -28,17 +28,18 @@ This document consolidates all professional UI requirements for GenAI Kitchen, p
 
 **Implementation**:
 ```typescript
-// Uses FLUX Redux for style transfer from reference
+// Uses fofr/style-transfer for direct style application
 const styleTransferWorkflow = {
   inputs: {
-    customerKitchen: Image,      // Their actual space (base image)
-    styleReference: Image,       // Unoform showroom/catalog (style source)
-    preserveLayout: boolean,     // Keep room structure
-    guidance: 0-10              // How strongly to follow the prompt
+    customerKitchen: Image,      // Their actual space (structure_image)
+    styleReference: Image,       // Unoform showroom/catalog (style_image)
+    prompt: string,             // Optional refinement prompt
+    structureStrength: 0-1,     // How much to preserve original structure
+    denoisingStrength: 0-1      // Style intensity
   },
-  model: 'black-forest-labs/flux-redux-dev',
-  approach: 'Use customerKitchen as base, extract style from reference via prompt',
-  output: 'styled kitchen maintaining original layout'
+  model: 'fofr/style-transfer',
+  approach: 'Direct style transfer preserving kitchen structure',
+  output: 'styled kitchen maintaining original layout with catalog materials'
 }
 ```
 
@@ -47,18 +48,18 @@ const styleTransferWorkflow = {
 
 **Implementation**:
 ```typescript
-// Uses FLUX Depth for perspective-aware generation
+// Uses Interior Design AI specialized for empty rooms
 const emptyRoomWorkflow = {
   inputs: {
-    emptyRoom: Image,           // Bare room photo (control image)
-    kitchenStyle: UnoformStyle, // Selected design  
-    prompt: string,             // Detailed kitchen description
-    guidance: 0-10,             // Prompt adherence strength
-    steps: 28                   // Quality steps
+    emptyRoom: Image,           // Bare room photo
+    prompt: string,             // Detailed kitchen description with Unoform style
+    guidanceScale: 1-20,        // How closely to follow prompt
+    promptStrength: 0-1,        // Transformation intensity
+    steps: 20-50                // Quality steps
   },
-  model: 'black-forest-labs/flux-depth-dev',
-  approach: 'Auto-generates depth map from empty room, maintains perspective',
-  output: 'fully furnished kitchen with proper perspective and spatial relationships'
+  model: 'adirik/interior-design',
+  approach: 'Specialized interior design model that understands room structure',
+  output: 'fully furnished kitchen maintaining original room perspective'
 }
 ```
 
@@ -67,25 +68,33 @@ const emptyRoomWorkflow = {
 
 **Implementation**:
 ```typescript
-// Uses FLUX Redux iteratively (no direct multi-image support)
+// Two approaches: Sequential style transfer or selective inpainting
 const multiReferenceWorkflow = {
-  inputs: {
-    targetSpace: Image,         // Customer's kitchen base
-    references: [{
-      image: Image,             // Reference kitchen A
-      elements: ['cabinets'],   // What to extract
-      prompt: string            // "Apply cabinet style from reference"
-    }, {
-      image: Image,             // Reference kitchen B  
-      elements: ['island'],
-      prompt: string
-    }],
-    processOrder: 'sequential'  // Apply one at a time
+  approach1: {
+    method: 'Sequential Style Transfer',
+    inputs: {
+      targetSpace: Image,         // Customer's kitchen base
+      references: [{
+        image: Image,             // Reference kitchen A
+        elements: ['cabinets'],   // What to extract
+      }],
+      processOrder: 'sequential'  // Apply one at a time
+    },
+    model: 'fofr/style-transfer',
+    limitation: 'Each pass may dilute previous styles',
+    output: 'kitchen with combined elements (2-3 passes max)'
   },
-  model: 'black-forest-labs/flux-redux-dev',
-  approach: 'Sequential processing - each reference applied to previous result',
-  limitation: 'No native multi-image support - requires multiple API calls',
-  output: 'kitchen with combined elements (quality may degrade with each pass)'
+  approach2: {
+    method: 'Selective Inpainting',
+    inputs: {
+      targetSpace: Image,         // Customer's kitchen
+      masks: Image[],            // User-drawn masks for each area
+      prompts: string[]          // Specific prompts per area
+    },
+    model: 'black-forest-labs/flux-fill-pro',
+    advantage: 'Precise control over specific areas',
+    output: 'kitchen with selectively replaced elements'
+  }
 }
 ```
 
@@ -101,7 +110,7 @@ const multiReferenceWorkflow = {
 │  └─────────────────┴──────────────┴─────────────────┘          │
 │  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━          │
 ├─────────────────────────────────────────────────────────────────┤
-│  Model: [FLUX Redux ▼]  Cost: ~$0.012/img  Time: ~15-20s       │
+│  Model: [Style Transfer Pro ▼]  Cost: ~$0.003/img  Time: ~3s   │
 ├─────────────────────────────────────────────────────────────────┤
 │  ┌─────────────────────────────────┐  ┌───────────────────────┐ │
 │  │                                 │  │   Reference Manager   │ │
@@ -327,7 +336,7 @@ async function handleStyleTransfer(source: string, reference: string, params: an
 ### 2. Create `/api/empty-room/route.ts`
 ```typescript
 async function handleEmptyRoom(emptyRoom: string, params: any) {
-  // Use FLUX Depth for perspective-aware generation
+  // Use FLUX Canny Pro for structure-aware generation
   const input = {
     control_image: emptyRoom,  // Empty room photo
     prompt: buildEmptyRoomPrompt(params),  // Kitchen design description
@@ -338,8 +347,8 @@ async function handleEmptyRoom(emptyRoom: string, params: any) {
     output_quality: 80
   };
   
-  // Depth model automatically extracts depth map and maintains perspective
-  return replicate.run('black-forest-labs/flux-depth-dev', { input });
+  // Canny model preserves edges and room structure while adding kitchen elements
+  return replicate.run('black-forest-labs/flux-canny-pro', { input });
 }
 ```
 
@@ -412,9 +421,7 @@ async function handleMultiReference(target: string, references: ReferenceImage[]
 ### Phase 5: Polish & Testing (Week 5) ✅ COMPLETED
 1. ✅ Add cost estimation for each scenario (CostEstimator component)
 2. ✅ Implement progress tracking with detailed feedback
-3. ✅ Create scenario-specific presets (PresetTemplates component)
-4. ✅ Add export templates for client presentations (ExportTemplates component)
-5. ✅ Performance optimization (imageCache, requestDebouncer utilities)
+3. ✅ Performance optimization (imageCache, requestDebouncer utilities)
 
 ## Model Requirements
 
@@ -457,7 +464,7 @@ async function handleMultiReference(target: string, references: ReferenceImage[]
    - Fallback: FLUX Redux Dev with detailed prompt engineering
 
 2. **Empty Room**:
-   - Primary: FLUX Depth Dev - Best perspective maintenance
+   - Primary: FLUX Canny Pro - Best structure preservation
    - Alternative: `adirik/interior-design` with empty room as base
    - Creative: FLUX 1.1 Pro Ultra for complex lighting scenarios
 
@@ -571,27 +578,28 @@ async function handleMultiReference(target: string, references: ReferenceImage[]
 ## Practical Implementation Considerations
 
 ### Style Transfer Workflow
-Since FLUX Redux doesn't accept reference images directly:
-1. **Prompt Engineering**: Extract style characteristics from reference and describe in prompt
-2. **Visual Analysis**: Consider pre-analyzing reference image to extract:
-   - Color palette (hex codes)
-   - Material descriptions
-   - Cabinet door styles
-   - Hardware finishes
-3. **Two-Step Process**: Option to use Canny/Depth for structure + Redux for style
+Using fofr/style-transfer for direct style application:
+1. **Direct Transfer**: Model accepts both source and style images directly
+2. **No Prompt Engineering Needed**: Style is extracted automatically from reference
+3. **Fine Control**: Adjust structure preservation and style intensity
+4. **Model Options**: Choose between fast, realistic, high-quality, cinematic modes
+5. **Alternative**: Use FLUX Canny Pro when text-based style description is sufficient
 
 ### Empty Room Best Practices  
-FLUX Depth is ideal for this scenario:
+Interior Design AI (adirik) is ideal for this scenario:
 1. **Image Requirements**: Well-lit empty room photos work best
-2. **Prompt Details**: Include room dimensions and orientation in prompt
-3. **Fallback Option**: FLUX 1.1 Pro for rooms with complex lighting
+2. **Prompt Details**: Include room dimensions and specific Unoform style in prompt
+3. **Parameters**: Adjust guidance_scale (7-12) and prompt_strength (0.8-1.0)
+4. **Fallback Options**: FLUX Canny Pro for edge preservation, FLUX 1.1 Pro for complex scenes
+5. **Structure Preservation**: Model understands room perspective and maintains it
 
 ### Multi-Reference Alternatives
 Given no native multi-image support:
-1. **Priority Order**: Process most important reference first
-2. **Prompt Aggregation**: Combine all element descriptions in single prompt with FLUX Pro Ultra
-3. **Quality Control**: Limit to 2-3 references to minimize degradation
-4. **Manual Composition**: Use FLUX Fill Pro for selective element replacement
+1. **Sequential Style Transfer**: Use fofr/style-transfer iteratively (2-3 passes max)
+2. **Selective Inpainting**: Use FLUX Fill Pro with masks for specific areas
+3. **Priority Order**: Apply most important reference first to minimize degradation
+4. **Prompt Aggregation**: Combine element descriptions with FLUX Pro Ultra
+5. **Quality Control**: Monitor degradation between passes, stop if quality drops
 
 ## Current Implementation Status
 
@@ -603,20 +611,20 @@ Given no native multi-image support:
 - Multi-image upload with drag-drop support
 - Reference image manager with role assignment and weights
 - Progress tracking for multi-step operations
-- Integrated new models (Interior Design AI, InstantID)
+- Integrated correct models (Style Transfer Pro, Interior Design AI, FLUX Fill Pro)
 
 #### Style Transfer Scenario ✅
-- Multiple model options: Interior Design, InstantID, Redux, Canny Pro
-- Reference image upload with preview
-- Style strength controls via model parameters
-- Element selection (cabinets, island, countertops, etc.)
-- Weight sliders for influence control
+- Multiple model options: Style Transfer Pro (fofr), FLUX Canny Pro
+- Dual image inputs: source kitchen and style reference
+- Style intensity and structure preservation controls
+- Model-specific parameters (style model selection, denoising strength)
+- Direct style application without prompt engineering
 
 #### Empty Room Scenario ✅
 - Room dimension inputs with area calculation
 - Perspective guides overlay with draggable vanishing point
 - Lighting condition selector (natural, evening, bright)
-- Integration with FLUX Depth Dev for perspective preservation
+- Integration with Interior Design AI (adirik) specialized for empty rooms
 - Visual grid overlay toggle
 
 #### Multi-Reference Scenario ✅
@@ -642,25 +650,7 @@ Given no native multi-image support:
    - Real-time status updates during API calls
    - Step-specific details array for transparency
 
-3. **Scenario-Specific Presets** ✅
-   - PresetTemplates component with 9 pre-configured workflows
-   - Style Transfer: Modern Scandinavian, Industrial Chic, Coastal Fresh
-   - Empty Room: Compact Efficiency, Open Concept, Galley Optimization
-   - Multi-Reference: Style Fusion, Element Merge, Color Harmony
-   - Each preset includes optimized parameters and prompts
-   - Visual indicators for popularity and estimated time
-   - Collapsible left panel with templates
-
-4. **Export Templates** ✅
-   - ExportTemplates component with 4 export options
-   - High-resolution image download
-   - Before/After comparison image generation
-   - Project Summary PDF (HTML-based with print styling)
-   - Client Presentation (interactive HTML slideshow)
-   - Complete Project Package (placeholder for ZIP export)
-   - Modal interface with progress feedback
-
-5. **Performance Optimization** ✅
+3. **Performance Optimization** ✅
    - ImageCache utility with LRU eviction (50 image capacity)
    - 1-hour cache expiration for generated images
    - Request debouncer to prevent double-clicks
@@ -677,15 +667,12 @@ The professional UI implementation has successfully achieved all Phase 1-7 objec
 2. **Advanced Model Integration**: Interior Design AI and InstantID for better results
 3. **Professional Workspace**: 
    - Resizable panels with drag handles
-   - Collapsible preset templates sidebar
    - Multi-image reference manager
    - Perspective guides for empty rooms
    - Batch processing queue management
 4. **User Experience Enhancements**:
    - Real-time cost estimation
    - Detailed progress tracking with step feedback
-   - 12 scenario-specific presets (including batch processing)
-   - 4 professional export options
    - Cache status indicator
    - Queue statistics and controls
 5. **Performance Optimizations**:
@@ -715,13 +702,11 @@ The professional UI implementation has successfully achieved all Phase 1-7 objec
 4. **ProgressTracker** - Detailed progress with duration and steps
 5. **PerspectiveGuides** - Visual guides for empty room scenarios
 6. **CostEstimator** - Real-time cost calculation
-7. **PresetTemplates** - 12 scenario-specific workflow presets (including batch)
-8. **ExportTemplates** - 4 professional export formats
-9. **CacheStatus** - Cache monitoring indicator
-10. **UnoformCatalog** - Mock catalog browser for testing
-11. **StyleTransferTest** - Comprehensive testing interface
-12. **Resizable UI** - Flexible workspace panels
-13. **BatchProcessing** - Queue management for bulk image processing
+7. **CacheStatus** - Cache monitoring indicator
+8. **UnoformCatalog** - Mock catalog browser for testing
+9. **StyleTransferTest** - Comprehensive testing interface
+10. **Resizable UI** - Flexible workspace panels
+11. **BatchProcessing** - Queue management for bulk image processing
 
 The professional interface successfully delivers a production-ready tool that empowers Unoform employees to create stunning kitchen visualizations efficiently, with all the advanced features needed for client presentations.
 
@@ -769,11 +754,6 @@ A sophisticated queue management system with:
 - Shares style reference selection from main UI
 - Compatible with all style transfer models
 
-#### 3. **Preset Templates**
-Three batch-specific presets added:
-- **Quick Style Apply**: Fast processing (30s/image) with balanced quality
-- **High Quality Batch**: Maximum quality (50s/image) for presentations
-- **Volume Processing**: Optimized for large batches (20s/image)
 
 ### Component Architecture
 ```typescript
@@ -801,10 +781,9 @@ interface BatchProcessingProps {
 1. Select "Batch Processing" tab in professional interface
 2. Choose or upload a style reference image
 3. Drop multiple customer kitchen images into the queue
-4. Optionally select a preset template for optimized settings
-5. Click "Start Processing" to begin sequential processing
-6. Monitor progress with real-time updates
-7. Download individual results or wait for batch completion
+4. Click "Start Processing" to begin sequential processing
+5. Monitor progress with real-time updates
+6. Download individual results or wait for batch completion
 
 ### Technical Implementation
 - **Sequential Processing**: Images processed one at a time to maintain quality

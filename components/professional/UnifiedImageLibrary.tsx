@@ -45,7 +45,6 @@ export function UnifiedImageLibrary({
   const [selectedSource, setSelectedSource] = useState<string | null>(null);
   const [selectedReferences, setSelectedReferences] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Load images from localStorage on mount
@@ -106,7 +105,6 @@ export function UnifiedImageLibrary({
     if (errors && errors.length > 0) {
       const errorMessages = errors.map((err: any) => err.message || 'Upload failed').join(', ');
       setUploadError(errorMessages);
-      setUploadProgress(0);
       return;
     }
     
@@ -130,13 +128,9 @@ export function UnifiedImageLibrary({
         if (!selectedSource && newImages.length > 0) {
           selectAsSource(newImages[0]);
         }
-        
-        // Reset progress after successful upload
-        setTimeout(() => setUploadProgress(0), 1000);
       } catch (error) {
         console.error('Error processing uploaded files:', error);
         setUploadError('Failed to process uploaded files');
-        setUploadProgress(0);
       }
     }
   }, [selectedSource, selectAsSource]);
@@ -291,24 +285,9 @@ export function UnifiedImageLibrary({
         <UploadDropzone
           options={uploadOptions}
           onUpdate={handleUpload}
-          onProgress={({ progress }) => {
-            setUploadProgress(progress);
-            setUploadError(null); // Clear errors during progress
-          }}
           height="120px"
           width="100%"
         />
-        {uploadProgress > 0 && uploadProgress < 100 && (
-          <div className="mt-2">
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-unoform-gold h-2 rounded-full transition-all duration-300"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-            <p className="text-xs text-gray-600 mt-1 text-center">Uploading... {Math.round(uploadProgress)}%</p>
-          </div>
-        )}
         {uploadError && (
           <div className="mt-2 p-2 bg-red-50 text-red-600 text-sm rounded-md flex items-center justify-between">
             <span>{uploadError}</span>
